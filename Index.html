@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fútbol - Partidos Semanales</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#1e3a8a',
+            background: '#1a202c',
+            card: '#2d3748',
+            text: '#e2e8f0'
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-background text-text font-sans">
+  <div class="container mx-auto p-4">
+    <h1 class="text-3xl font-bold text-center mb-4">⚽ Partidos de Fútbol</h1>
+
+    <!-- Botones de fecha -->
+    <div id="dateButtons" class="flex flex-wrap justify-center gap-2 mb-6"></div>
+
+    <!-- Filtro de competiciones -->
+    <div id="competitionSections" class="space-y-4 mb-6"></div>
+
+    <!-- Resultados -->
+    <div id="matchesContainer" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  </div>
+
+  <script>
+    const API_KEY = '147ad526b31203abbf6a9c42c43811c2';
+    const headers = { "x-apisports-key": API_KEY };
+    const today = new Date();
+    const startDate = new Date(today);
+    const endDate = new Date(today);
+    startDate.setDate(today.getDate() - 7);
+    endDate.setDate(today.getDate() + 7);
+
+    let allMatches = [];
+    let selectedCompetition = null;
+    let selectedDate = today;
+
+    function getFlag(country) {
+      return new Intl.DisplayNames(['en'], { type: 'region' })
+        .of(new Intl.Locale('en-' + country).region || country)
+        .replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    function countryToFlag(countryCode) {
+      if (!countryCode) return '🌍';
+      return countryCode
+        .toUpperCase()
+        .replace(/./g, char => String.fromCodePoint(127397 + char.charCodeAt()));
+    }
+
+    function categorizeCompetition(league) {
+      const name = league.name.toLowerCase();
+      if (name.includes("friendly")) return "Amistosos";
+      if (name.includes("champions") || name.includes("europa") || name.includes("conference") || name.includes("world") || name.includes("euro") || name.includes("nations")) return "Internacionales";
+      if (name.includes("cup") || name.includes("copa") || name.includes("super")) return "Copas";
+      return "Ligas";
+    }
+
+    function generateDateButtons() {
+      const container = document.getElementById("dateButtons");
+      for (let i = -7; i <= 7; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+        const btn = document.createElement("button");
+        btn.className = `px-3 py-1 rounded-full text-sm font-medium border shadow transition bg-gray-700 text-white hover:bg-primary`;
+        btn.textContent = date.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+        btn.onclick = () => {
+          selectedDate = date;
+          document.querySelectorAll('#dateButtons button').forEach(b => b.classList.remove('bg-primary'));
+          btn.classList.add('bg-primary');
+          fetchAndRenderMatches();
+        };
+        if (i === 0) btn.classList.add('bg-primary');
+        container.appendChild(btn);
+      }
+    }
+
+    async function fetchAndRenderMatches() {
+      if (selectedDate < startDate || selectedDate > endDate) return;
+      const dateStr = selectedDate.toISOString().split("T")[0];
+      const url = `https://v3.football.api-sports.io/fixtures?date=${dateStr}`;
+      const res = await fetch(url, { headers });
+      const data = await res.json();
+      allMatches = data.response || [];
+      console.log(`Partidos recibidos para ${dateStr}:`, allMatches.length);
+      renderCompetitionButtons();
+      renderMatches();
+    }
+
+    function renderCompetitionButtons() {
+      const container = document.getElementById("competitionSections");
+      container.innerHTML = "";
+      const grouped = { Ligas: [], Copas: [], Amistosos: [], Internacionales: [] };
+
+      allMatches.forEach(m => {
+        const cat = categorizeCompetition(m.league);
+        if (!grouped[cat].find(c => c.name === m.league.name)) grouped[cat].push({ name: m.league.name, country: m.league.country });
+      });
+
+      for (const cat in grouped) {
+        if (grouped[cat].length === 0) continue;
+        const section = document.createElement("div");
+        section.innerHTML = `<h2 class='text-lg font-semibold mb-2'>${cat}</h2>`;
+        const wrapper = document.createElement("div");
+        wrapper.className = "flex flex-wrap gap-2";
+
+        grouped[cat].sort((a, b) => a.name.localeCompare(b.name)).forEach(comp => {
+          const flag = countryToFlag(comp.country?.slice(0, 2) || "");
+          const btn = document.createElement("button");
+          btn.className = `px-4 py-1 rounded-full text-sm font-medium border shadow transition bg-gray-700 text-white hover:bg-primary flex items-center gap-2`;
+          btn.innerHTML = `<span>${flag}</span><span>${comp.name}</span>`;
+          btn.onclick = () => {
+            selectedCompetition = selectedCompetition === comp.name ? null : comp.name;
+            renderMatches();
+            document.querySelectorAll('#competitionSections button').forEach(b => b.classList.remove('bg-primary'));
+            btn.classList.add('bg-primary');
+          };
+          wrapper.appendChild(btn);
+        });
+
+        section.appendChild(wrapper);
+        container.appendChild(section);
+      }
+    }
+
+    function renderMatches() {
+      const container = document.getElementById("matchesContainer");
+      container.innerHTML = "";
+      let filtered = allMatches;
+      if (selectedCompetition) filtered = filtered.filter(m => m.league.name === selectedCompetition);
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class='col-span-full text-center text-red-400 font-semibold'>⚠️ No se han encontrado partidos. Puede deberse a un problema con la API o a que no hay partidos ese día.</div>`;
+        return;
+      }
+
+      filtered.forEach(match => {
+        const isPlayed = ["FT", "AET", "PEN"].includes(match.fixture.status.short);
+        const flag = countryToFlag(match.league.country?.slice(0, 2) || "");
+        const card = document.createElement("div");
+        card.className = `bg-card text-text p-4 rounded shadow flex flex-col justify-between h-full ${isPlayed ? 'border-l-4 border-green-500' : ''}`;
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center gap-4 mb-2">
+              <img src="${match.league.logo}" class="w-6 h-6" />
+              <span class="text-sm">${flag} ${match.league.name}</span>
+            </div>
+            <div class="flex justify-between items-center text-center">
+              <div class="flex flex-col items-center">
+                <img src="${match.teams.home.logo}" class="w-10 h-10" />
+                <span class="text-sm">${match.teams.home.name}</span>
+              </div>
+              <div class="text-xl font-bold">
+                ${isPlayed ? `<span class='text-green-400'>${match.goals.home} - ${match.goals.away}</span>` : 'vs'}
+              </div>
+              <div class="flex flex-col items-center">
+                <img src="${match.teams.away.logo}" class="w-10 h-10" />
+                <span class="text-sm">${match.teams.away.name}</span>
+              </div>
+            </div>
+          </div>
+          <p class="text-center mt-4 text-sm text-gray-300">${new Date(match.fixture.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    generateDateButtons();
+    fetchAndRenderMatches();
+  </script>
+</body>
+</html>

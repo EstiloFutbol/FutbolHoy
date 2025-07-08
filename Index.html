@@ -27,6 +27,16 @@
     <!-- Botones de fecha -->
     <div id="dateButtons" class="flex flex-wrap justify-center gap-2 mb-6"></div>
 
+    <!-- Buscador de equipos -->
+    <div class="flex justify-center mb-6">
+      <input
+        id="searchInput"
+        type="text"
+        placeholder="Buscar equipo"
+        class="px-3 py-1 rounded-full border bg-gray-700 text-white focus:outline-none"
+      />
+    </div>
+
     <!-- Filtro de competiciones -->
     <div id="competitionSections" class="space-y-4 mb-6"></div>
 
@@ -46,6 +56,7 @@
     let allMatches = [];
     let selectedCompetition = null;
     let selectedDate = today;
+    let searchQuery = '';
 
     function getFlag(country) {
       return new Intl.DisplayNames(['en'], { type: 'region' })
@@ -140,6 +151,12 @@
       container.innerHTML = "";
       let filtered = allMatches;
       if (selectedCompetition) filtered = filtered.filter(m => m.league.name === selectedCompetition);
+      if (searchQuery) {
+        filtered = filtered.filter(m =>
+          m.teams.home.name.toLowerCase().includes(searchQuery) ||
+          m.teams.away.name.toLowerCase().includes(searchQuery)
+        );
+      }
 
       if (filtered.length === 0) {
         container.innerHTML = `<div class='col-span-full text-center text-red-400 font-semibold'>⚠️ No se han encontrado partidos. Puede deberse a un problema con la API o a que no hay partidos ese día.</div>`;
@@ -180,6 +197,10 @@
     }
 
     generateDateButtons();
+    document.getElementById('searchInput').addEventListener('input', e => {
+      searchQuery = e.target.value.toLowerCase();
+      renderMatches();
+    });
     fetchAndRenderMatches();
   </script>
 </body>

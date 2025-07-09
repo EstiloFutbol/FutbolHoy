@@ -43,7 +43,6 @@ while current <= END and calls < MAX_CALLS:
 
 with open("datos.json", "w", encoding="utf-8") as f:
     json.dump(result, f, ensure_ascii=False, indent=2)
-=======
 import os
 import json
 from datetime import datetime, timedelta

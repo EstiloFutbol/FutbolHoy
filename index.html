@@ -48,8 +48,7 @@
   </div>
 
   <script>
-    const API_KEY = '147ad526b31203abbf6a9c42c43811c2';
-    const headers = { "x-apisports-key": API_KEY };
+    let allData = {};
     const today = new Date();
     const startDate = new Date(today);
     const endDate = new Date(today);
@@ -59,6 +58,11 @@
     let allMatches = [];
     let selectedCompetition = null;
     let selectedDate = today;
+
+    async function loadData() {
+      const res = await fetch('datos.json');
+      allData = await res.json();
+    }
 
     function getFlag(country) {
       return new Intl.DisplayNames(['en'], { type: 'region' })
@@ -103,11 +107,7 @@
     async function fetchAndRenderMatches() {
       if (selectedDate < startDate || selectedDate > endDate) return;
       const dateStr = selectedDate.toISOString().split("T")[0];
-      const url = `https://v3.football.api-sports.io/fixtures?date=${dateStr}`;
-      const res = await fetch(url, { headers });
-      const data = await res.json();
-      allMatches = data.response || [];
-      console.log(`Partidos recibidos para ${dateStr}:`, allMatches.length);
+      allMatches = allData[dateStr] || [];
       renderCompetitionButtons();
       renderMatches();
     }
@@ -212,11 +212,13 @@
       themeToggle.textContent = isLight ? 'Modo Oscuro' : 'Modo Claro';
     };
 
-    reloadButton.onclick = fetchAndRenderMatches;
+    reloadButton.onclick = () => loadData().then(fetchAndRenderMatches);
 
     applyTheme();
-    generateDateButtons();
-    fetchAndRenderMatches();
+    loadData().then(() => {
+      generateDateButtons();
+      fetchAndRenderMatches();
+    });
   </script>
 </body>
 </html>

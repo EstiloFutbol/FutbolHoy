@@ -5,76 +5,46 @@ import requests
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List
 
-API_KEY = os.getenv("API_KEY", "941084e84950203ffc04aaa2b7fcf1f3")
+# ⚙️ Claves RapidAPI (modificables por entorno o hardcodeadas aquí)
+RAPIDAPI_HOST = "api-football-v1.p.rapidapi.com"
+RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY", "c9700f3b0emsh770064a38cd34fdp161ed7jsncea2230ea135")
+
 HEADERS = {
-    "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
-    "x-rapidapi-key": API_KEY,
+    "x-rapidapi-host": RAPIDAPI_HOST,
+    "x-rapidapi-key": RAPIDAPI_KEY
 }
-BASE_URL = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
 
-TODAY = datetime.now(timezone.utc)
-START = TODAY - timedelta(days=7)
-END = TODAY + timedelta(days=7)
-MAX_CALLS = 100
+BASE_URL = "https://api-football-v1.p.rapidapi.com/v2/fixtures/date"
 
+# 🔁 Rango de fechas
+HOY = datetime.utcnow()
+INICIO = HOY - timedelta(days=7)
+FIN = HOY + timedelta(days=7)
 
-def fetch_matches(date_str: str) -> List[Dict]:
-    """Fetch matches for a given date from the API."""
-    url = f"{BASE_URL}?date={date_str}&timezone=Europe/Madrid"
-    resp = requests.get(url, headers=HEADERS, timeout=30)
-    resp.raise_for_status()
-    data = resp.json()
-    return data.get("response", [])
+# 🧾 Resultados por fecha
+resultados = {}
 
+fecha_actual = INICIO
+while fecha_actual <= FIN:
+    fecha_str = fecha_actual.strftime("%Y-%m-%d")
+    print(f"🔍 Consultando fixtures del {fecha_str}...")
 
-result: Dict[str, List[Dict]] = {}
-current = START
-calls = 0
-while current <= END and calls < MAX_CALLS:
-    date_str = current.strftime("%Y-%m-%d")
-    try:
-        result[date_str] = fetch_matches(date_str)
-        calls += 1
-    except Exception as exc:
-        print(f"Failed to fetch {date_str}: {exc}")
-        result[date_str] = []
-    time.sleep(0.5)
-    current += timedelta(days=1)
+    url = f"{BASE_URL}/{fecha_str}"
 
-with open("datos.json", "w", encoding="utf-8") as f:
-    json.dump(result, f, ensure_ascii=False, indent=2)
-import os
-import json
-from datetime import datetime, timedelta
-import requests
-
-API_KEY = os.getenv('API_KEY')
-if not API_KEY:
-    raise RuntimeError('API_KEY environment variable not set')
-
-HEADERS = {'x-apisports-key': API_KEY}
-TODAY = datetime.utcnow()
-START = TODAY - timedelta(days=7)
-END = TODAY + timedelta(days=7)
-
-result = {}
-
-current = START
-while current <= END:
-    date_str = current.strftime('%Y-%m-%d')
-    url = f'https://v3.football.api-sports.io/fixtures?date={date_str}'
     try:
         response = requests.get(url, headers=HEADERS, timeout=30)
         response.raise_for_status()
         data = response.json()
-        result[date_str] = data.get('response', [])
-    except Exception as exc:
-        print(f'Failed to fetch {date_str}: {exc}')
-        result[date_str] = []
-    current += timedelta(days=1)
+        resultados[fecha_str] = data.get("api", {}).get("fixtures", [])
+    except Exception as e:
+        print(f"⚠️ Error al obtener datos del {fecha_str}: {e}")
+        resultados[fecha_str] = []
 
-# Guardar los datos en un archivo JSON
-with open('datos.json', 'w', encoding='utf-8') as f:
+    fecha_actual += timedelta(days=1)
+    time.sleep(1)  # evitar límite de peticiones
+
+# 💾 Guardar datos
+with open("datos.json", "w", encoding="utf-8") as f:
     json.dump(resultados, f, ensure_ascii=False, indent=2)
 
 print("✅ Archivo datos.json generado correctamente.")

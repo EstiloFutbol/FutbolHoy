@@ -2,33 +2,38 @@ name: Update datos.json
 
 on:
   schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch:
+    - cron: '0 0 * * *'  # Todos los días a las 00:00 UTC
+  workflow_dispatch:      # También puede lanzarse manualmente
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - name: Clonar repositorio
+        uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
-      - name: Install dependencies
+          python-version: '3.11'
+
+      - name: Instalar dependencias
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      - name: Generate datos.json
-        env:
-          API_KEY: ${{ secrets.API_KEY }}
+          pip install requests
+
+      - name: Ejecutar script para generar datos.json
         run: |
           python DatosListaPartidos.py
-      - name: Commit and push
+
+      - name: Hacer commit si hay cambios
         run: |
-          git config user.name 'github-actions'
-          git config user.email 'github-actions@github.com'
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
           git add datos.json
           if git diff --cached --quiet; then
-            echo 'No changes to commit'
+            echo "No hay cambios en datos.json"
           else
-            git commit -m 'Update datos.json'
+            git commit -m "📈 Update datos.json"
             git push

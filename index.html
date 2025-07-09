@@ -77,8 +77,8 @@
         .replace(/./g, char => String.fromCodePoint(127397 + char.charCodeAt()));
     }
 
-    function categorizeCompetition(league) {
-      const name = league.name.toLowerCase();
+    function categorizeCompetition(name) {
+      name = name.toLowerCase();
       if (name.includes("friendly")) return "Amistosos";
       if (name.includes("champions") || name.includes("europa") || name.includes("conference") || name.includes("world") || name.includes("euro") || name.includes("nations")) return "Internacionales";
       if (name.includes("cup") || name.includes("copa") || name.includes("super")) return "Copas";
@@ -118,8 +118,9 @@
       const grouped = { Ligas: [], Copas: [], Amistosos: [], Internacionales: [] };
 
       allMatches.forEach(m => {
-        const cat = categorizeCompetition(m.league);
-        if (!grouped[cat].find(c => c.name === m.league.name)) grouped[cat].push({ name: m.league.name, country: m.league.country });
+        const name = m.league ? m.league.name : m.competition;
+        const cat = categorizeCompetition(name);
+        if (!grouped[cat].includes(name)) grouped[cat].push(name);
       });
 
       for (const cat in grouped) {
@@ -129,13 +130,12 @@
         const wrapper = document.createElement("div");
         wrapper.className = "flex flex-wrap gap-2";
 
-        grouped[cat].sort((a, b) => a.name.localeCompare(b.name)).forEach(comp => {
-          const flag = countryToFlag(comp.country?.slice(0, 2) || "");
+        grouped[cat].sort((a, b) => a.localeCompare(b)).forEach(comp => {
           const btn = document.createElement("button");
-          btn.className = `px-4 py-1 rounded-full text-sm font-medium border shadow transition bg-gray-700 text-white hover:bg-primary flex items-center gap-2`;
-          btn.innerHTML = `<span>${flag}</span><span>${comp.name}</span>`;
+          btn.className = `px-4 py-1 rounded-full text-sm font-medium border shadow transition bg-gray-700 text-white hover:bg-primary`;
+          btn.textContent = comp;
           btn.onclick = () => {
-            selectedCompetition = selectedCompetition === comp.name ? null : comp.name;
+            selectedCompetition = selectedCompetition === comp ? null : comp;
             renderMatches();
             document.querySelectorAll('#competitionSections button').forEach(b => b.classList.remove('bg-primary'));
             btn.classList.add('bg-primary');
@@ -152,7 +152,12 @@
       const container = document.getElementById("matchesContainer");
       container.innerHTML = "";
       let filtered = allMatches;
-      if (selectedCompetition) filtered = filtered.filter(m => m.league.name === selectedCompetition);
+      if (selectedCompetition) {
+        filtered = filtered.filter(m => {
+          const name = m.league ? m.league.name : m.competition;
+          return name === selectedCompetition;
+        });
+      }
 
       if (filtered.length === 0) {
         container.innerHTML = `<div class='col-span-full text-center text-red-400 font-semibold'>⚠️ No se han encontrado partidos. Puede deberse a un problema con la API o a que no hay partidos ese día.</div>`;
@@ -160,33 +165,52 @@
       }
 
       filtered.forEach(match => {
-        const isPlayed = ["FT", "AET", "PEN"].includes(match.fixture.status.short);
-        const flag = countryToFlag(match.league.country?.slice(0, 2) || "");
+        const isApi = match.fixture && match.teams;
         const card = document.createElement("div");
-        card.className = `bg-card text-text p-4 rounded shadow flex flex-col justify-between h-full ${isPlayed ? 'border-l-4 border-green-500' : ''}`;
 
-        card.innerHTML = `
-          <div>
-            <div class="flex items-center gap-4 mb-2">
-              <img src="${match.league.logo}" class="w-6 h-6" />
-              <span class="text-sm">${flag} ${match.league.name}</span>
+        if (isApi) {
+          const isPlayed = ["FT", "AET", "PEN"].includes(match.fixture.status.short);
+          card.className = `bg-card text-text p-4 rounded shadow flex flex-col justify-between h-full ${isPlayed ? 'border-l-4 border-green-500' : ''}`;
+          const flag = countryToFlag(match.league.country?.slice(0, 2) || "");
+          card.innerHTML = `
+            <div>
+              <div class="flex items-center gap-4 mb-2">
+                <img src="${match.league.logo}" class="w-6 h-6" />
+                <span class="text-sm">${flag} ${match.league.name}</span>
+              </div>
+              <div class="flex justify-between items-center text-center">
+                <div class="flex flex-col items-center">
+                  <img src="${match.teams.home.logo}" class="w-10 h-10" />
+                  <span class="text-sm">${match.teams.home.name}</span>
+                </div>
+                <div class="text-xl font-bold">
+                  ${isPlayed ? `<span class='text-green-400'>${match.goals.home} - ${match.goals.away}</span>` : 'vs'}
+                </div>
+                <div class="flex flex-col items-center">
+                  <img src="${match.teams.away.logo}" class="w-10 h-10" />
+                  <span class="text-sm">${match.teams.away.name}</span>
+                </div>
+              </div>
             </div>
-            <div class="flex justify-between items-center text-center">
-              <div class="flex flex-col items-center">
-                <img src="${match.teams.home.logo}" class="w-10 h-10" />
-                <span class="text-sm">${match.teams.home.name}</span>
+            <p class="text-center mt-4 text-sm text-gray-300">${new Date(match.fixture.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+          `;
+        } else {
+          card.className = "bg-card text-text p-4 rounded shadow flex flex-col justify-between h-full";
+          const score = match.score || 'vs';
+          card.innerHTML = `
+            <div>
+              <div class="flex items-center gap-4 mb-2">
+                <span class="text-sm">${match.competition}</span>
               </div>
-              <div class="text-xl font-bold">
-                ${isPlayed ? `<span class='text-green-400'>${match.goals.home} - ${match.goals.away}</span>` : 'vs'}
-              </div>
-              <div class="flex flex-col items-center">
-                <img src="${match.teams.away.logo}" class="w-10 h-10" />
-                <span class="text-sm">${match.teams.away.name}</span>
+              <div class="flex justify-between items-center text-center">
+                <span class="flex-1">${match.home_team}</span>
+                <div class="text-xl font-bold">${score}</div>
+                <span class="flex-1">${match.away_team}</span>
               </div>
             </div>
-          </div>
-          <p class="text-center mt-4 text-sm text-gray-300">${new Date(match.fixture.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-        `;
+            <p class="text-center mt-4 text-sm text-gray-300">${match.time}</p>
+          `;
+        }
 
         container.appendChild(card);
       });

@@ -32,4 +32,3 @@ jobs:
           else
             git commit -m 'Update datos.json'
             git push
-          fi

@@ -33,8 +33,3 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add datos.json
-          if git diff --cached --quiet; then
-            echo "No hay cambios en datos.json"
-          else
-            git commit -m "Update datos.json"
-            git push

@@ -12,10 +12,16 @@
     .filters button { padding: 0.4em 0.8em; background: #333; border: none; border-radius: 4px; color: #ddd; cursor: pointer; white-space: nowrap; }
     .filters button.selected { background: #005f99; }
     .filters button:not(.selected):hover { background: #444; }
-    .match-table { width: 100%; border-collapse: collapse; margin-top: 1em; }
+    .competition-group { margin-top: 2em; }
+    .competition-title { background: #2a2a40; padding: 0.5em; font-weight: bold; text-align: left; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+    .competition-title img { width: 20px; height: 14px; margin-right: 0.5em; }
+    .arrow { display: inline-block; transition: transform 0.2s ease; }
+    .arrow.rotate { transform: rotate(180deg); }
+    .match-table { width: 100%; border-collapse: collapse; margin-top: 0.5em; }
     .match-table th, .match-table td { padding: 0.5em; text-align: center; border-bottom: 1px solid #444; }
     .match-table th { background: #2a2a40; }
     .match-table td img { width: 20px; height: 20px; vertical-align: middle; margin-right: 0.4em; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
@@ -35,6 +41,24 @@
 
   <script>
     const defaultLogo = 'https://via.placeholder.com/20?text=🏆';
+
+    const countryCodeMap = {
+      Argentina: "ar", Brazil: "br", Chile: "cl", Colombia: "co", France: "fr",
+      Germany: "de", Italy: "it", Mexico: "mx", Netherlands: "nl", Portugal: "pt",
+      Spain: "es", England: "gb", USA: "us", Uruguay: "uy", Peru: "pe",
+      Belgium: "be", Croatia: "hr", Denmark: "dk", Finland: "fi", Hungary: "hu",
+      Ireland: "ie", Israel: "il", Kazakhstan: "kz", Kosovo: "xk", Norway: "no",
+      Poland: "pl", Romania: "ro", Russia: "ru", Scotland: "gb-sct", Serbia: "rs",
+      Slovakia: "sk", Slovenia: "si", Sweden: "se", Switzerland: "ch", Turkey: "tr",
+      Ukraine: "ua", Wales: "gb-wls", Andorra: "ad", Cyprus: "cy", Gibraltar: "gi",
+      Estonia: "ee", Latvia: "lv", Lithuania: "lt", North_Macedonia: "mk", Georgia: "ge",
+      Armenia: "am", Bosnia_and_Herzegovina: "ba", Luxembourg: "lu", Iceland: "is"
+    };
+
+    function getFlagURL(country) {
+      const code = countryCodeMap[country.replace(/ /g, '_')] || 'xx';
+      return `https://flagcdn.com/20x15/${code}.png`;
+    }
 
     const tabs = {
       'yesterday': document.getElementById('btn-yesterday'),
@@ -76,7 +100,6 @@
           Object.values(leagues).forEach(l => {
             const btn = document.createElement('button');
             btn.dataset.league = l.name;
-            btn.className = 'selected';
             btn.textContent = l.name;
             btn.addEventListener('click', () => {
               btn.classList.toggle('selected');
@@ -102,19 +125,37 @@
               return;
             }
 
-            const table = document.createElement('table');
-            table.className = 'match-table';
-            table.innerHTML = `
-              <tr>
-                <th>Local</th>
-                <th>Hora</th>
-                <th>Visitante</th>
-              </tr>
-            `;
-
+            const grouped = {};
             matches
-              .filter(m => leagueSet.has(m.league.name))
+              .filter(m => leagueSet.size === 0 || leagueSet.has(m.league.name))
               .forEach(m => {
+                const key = m.league.name;
+                if (!grouped[key]) grouped[key] = { league: m.league, matches: [] };
+                grouped[key].matches.push(m);
+              });
+
+            Object.entries(grouped).forEach(([league, group]) => {
+              const groupDiv = document.createElement('div');
+              groupDiv.className = 'competition-group';
+
+              const title = document.createElement('div');
+              title.className = 'competition-title';
+              const flag = getFlagURL(group.league.country);
+              title.innerHTML = `
+                <div><img src="${flag}" onerror="this.src='${defaultLogo}'"> ${league}</div>
+                <span class="arrow">▼</span>
+              `;
+              const table = document.createElement('table');
+              table.className = 'match-table hidden';
+              table.innerHTML = `
+                <tr>
+                  <th>Local</th>
+                  <th>Hora</th>
+                  <th>Visitante</th>
+                </tr>
+              `;
+
+              group.matches.forEach(m => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                   <td><img src="${m.teams.home.logo || defaultLogo}" onerror="this.src='${defaultLogo}'"> ${m.teams.home.name}</td>
@@ -124,7 +165,16 @@
                 table.appendChild(row);
               });
 
-            container.appendChild(table);
+              title.addEventListener('click', () => {
+                table.classList.toggle('hidden');
+                const arrow = title.querySelector('.arrow');
+                arrow.classList.toggle('rotate');
+              });
+
+              groupDiv.appendChild(title);
+              groupDiv.appendChild(table);
+              container.appendChild(groupDiv);
+            });
           }
         });
     }

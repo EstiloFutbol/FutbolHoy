@@ -1,248 +1,108 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fútbol - Partidos Semanales</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: '#1e3a8a',
-            background: '#1a202c',
-            card: '#2d3748',
-            text: '#e2e8f0'
-          }
-        }
-      }
-    };
-  </script>
+  <title>Partidos de Fútbol</title>
   <style>
-    body.light {
-      background-color: #f9fafb !important;
-      color: #1a202c !important;
-    }
-    body.light .bg-background { background-color: #f9fafb !important; }
-    body.light .bg-card { background-color: #ffffff !important; }
-    body.light .text-text { color: #1a202c !important; }
+    body { background: #1e1e2f; color: #ddd; font-family: sans-serif; margin: 0; padding: 1rem; }
+    .tabs button { margin: 0.2em; padding: 0.5em 1em; background: #444; border: none; border-radius: 4px; color: #ddd; }
+    .tabs button.selected { background: #005f99; }
+    .tabs button:not(.selected):hover { background: #555; }
+    .filters button { margin: 0.2em; padding: 0.4em 0.8em; background: #333; border: none; border-radius: 4px; color: #ddd; cursor: pointer; }
+    .filters button.selected { background: #005f99; }
+    .filters button:not(.selected):hover { background: #444; }
+    .match { display: flex; align-items: center; justify-content: space-between; background: #282842; margin: 0.5em 0; padding: 0.8em; border-radius: 6px; }
+    .team { display: flex; align-items: center; }
+    .team img { width: 32px; height: 32px; margin-right: 0.5em; }
+    .datetime { color: #bbb; }
   </style>
 </head>
-<body class="bg-background text-text font-sans">
-  <div class="container mx-auto p-4">
-    <h1 class="text-3xl font-bold text-center mb-4">⚽ Partidos de Fútbol</h1>
-    <div class="flex justify-center gap-4 mb-4">
-      <button id="themeToggle" class="px-4 py-1 rounded bg-gray-700 text-white hover:bg-primary">Modo Claro</button>
-      <button id="reloadButton" class="px-4 py-1 rounded bg-gray-700 text-white hover:bg-primary">Recargar</button>
-    </div>
+<body>
 
-    <!-- Botones de fecha -->
-    <div id="dateButtons" class="flex flex-wrap justify-center gap-2 mb-6"></div>
+  <h1>⚽ Partidos de Fútbol</h1>
 
-    <!-- Filtro de competiciones -->
-    <div id="competitionSections" class="space-y-4 mb-6"></div>
-
-    <!-- Resultados -->
-    <div id="matchesContainer" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  <div class="tabs">
+    <button id="btn-yesterday">⟨ Yesterday</button>
+    <button id="btn-today" class="selected">Today</button>
+    <button id="btn-tomorrow">Tomorrow ⟩</button>
   </div>
 
+  <h2>Ligas & Copas</h2>
+  <div class="filters" id="league-filters">
+    <!-- Example buttons; adjust with your actual league list -->
+    <button data-league="Premier League" class="selected">Premier League</button>
+    <button data-league="UEFA Europa League" class="selected">Europa League</button>
+    <button data-league="La Liga" class="selected">La Liga</button>
+  </div>
+
+  <div id="matches"></div>
+
   <script>
-    let allData = {};
-    const today = new Date();
-    const startDate = new Date(today);
-    const endDate = new Date(today);
-    startDate.setDate(today.getDate() - 7);
-    endDate.setDate(today.getDate() + 7);
+    const defaultLogo = 'https://via.placeholder.com/32?text=🏆';
 
-    let allMatches = [];
-    let selectedCompetition = null;
-    let selectedDate = today;
-
-    async function loadData() {
-      const res = await fetch('datos.json');
-      allData = await res.json();
-    }
-
-    function getFlag(country) {
-      return new Intl.DisplayNames(['en'], { type: 'region' })
-        .of(new Intl.Locale('en-' + country).region || country)
-        .replace(/\b\w/g, l => l.toUpperCase());
-    }
-
-    function countryToFlag(countryCode) {
-      if (!countryCode) return '🌍';
-      return countryCode
-        .toUpperCase()
-        .replace(/./g, char => String.fromCodePoint(127397 + char.charCodeAt()));
-    }
-
-    function categorizeCompetition(name) {
-      name = name.toLowerCase();
-      if (name.includes("friendly")) return "Amistosos";
-      if (name.includes("champions") || name.includes("europa") || name.includes("conference") || name.includes("world") || name.includes("euro") || name.includes("nations")) return "Internacionales";
-      if (name.includes("cup") || name.includes("copa") || name.includes("super")) return "Copas";
-      return "Ligas";
-    }
-
-    function generateDateButtons() {
-      const container = document.getElementById("dateButtons");
-      for (let i = -7; i <= 7; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() + i);
-        const btn = document.createElement("button");
-        btn.className = `px-3 py-1 rounded-full text-sm font-medium border shadow transition bg-gray-700 text-white hover:bg-primary`;
-        btn.textContent = date.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
-        btn.onclick = () => {
-          selectedDate = date;
-          document.querySelectorAll('#dateButtons button').forEach(b => b.classList.remove('bg-primary'));
-          btn.classList.add('bg-primary');
-          fetchAndRenderMatches();
-        };
-        if (i === 0) btn.classList.add('bg-primary');
-        container.appendChild(btn);
-      }
-    }
-
-    async function fetchAndRenderMatches() {
-      if (selectedDate < startDate || selectedDate > endDate) return;
-      const dateStr = selectedDate.toISOString().split("T")[0];
-      allMatches = allData[dateStr] || [];
-      renderCompetitionButtons();
-      renderMatches();
-    }
-
-    function renderCompetitionButtons() {
-      const container = document.getElementById("competitionSections");
-      container.innerHTML = "";
-      const grouped = { Ligas: [], Copas: [], Amistosos: [], Internacionales: [] };
-
-      allMatches.forEach(m => {
-        const name = m.league ? m.league.name : m.competition;
-        const cat = categorizeCompetition(name);
-        if (!grouped[cat].includes(name)) grouped[cat].push(name);
-      });
-
-      for (const cat in grouped) {
-        if (grouped[cat].length === 0) continue;
-        const section = document.createElement("div");
-        section.innerHTML = `<h2 class='text-lg font-semibold mb-2'>${cat}</h2>`;
-        const wrapper = document.createElement("div");
-        wrapper.className = "flex flex-wrap gap-2";
-
-        grouped[cat].sort((a, b) => a.localeCompare(b)).forEach(comp => {
-          const btn = document.createElement("button");
-          btn.className = `px-4 py-1 rounded-full text-sm font-medium border shadow transition bg-gray-700 text-white hover:bg-primary`;
-          btn.textContent = comp;
-          btn.onclick = () => {
-            selectedCompetition = selectedCompetition === comp ? null : comp;
-            renderMatches();
-            document.querySelectorAll('#competitionSections button').forEach(b => b.classList.remove('bg-primary'));
-            btn.classList.add('bg-primary');
-          };
-          wrapper.appendChild(btn);
-        });
-
-        section.appendChild(wrapper);
-        container.appendChild(section);
-      }
-    }
-
-    function renderMatches() {
-      const container = document.getElementById("matchesContainer");
-      container.innerHTML = "";
-      let filtered = allMatches;
-      if (selectedCompetition) {
-        filtered = filtered.filter(m => {
-          const name = m.league ? m.league.name : m.competition;
-          return name === selectedCompetition;
-        });
-      }
-
-      if (filtered.length === 0) {
-        container.innerHTML = `<div class='col-span-full text-center text-red-400 font-semibold'>⚠️ No se han encontrado partidos. Puede deberse a un problema con la API o a que no hay partidos ese día.</div>`;
-        return;
-      }
-
-      filtered.forEach(match => {
-        const isApi = match.fixture && match.teams;
-        const card = document.createElement("div");
-
-        if (isApi) {
-          const isPlayed = ["FT", "AET", "PEN"].includes(match.fixture.status.short);
-          card.className = `bg-card text-text p-4 rounded shadow flex flex-col justify-between h-full ${isPlayed ? 'border-l-4 border-green-500' : ''}`;
-          const flag = countryToFlag(match.league.country?.slice(0, 2) || "");
-          card.innerHTML = `
-            <div>
-              <div class="flex items-center gap-4 mb-2">
-                <img src="${match.league.logo}" class="w-6 h-6" />
-                <span class="text-sm">${flag} ${match.league.name}</span>
-              </div>
-              <div class="flex justify-between items-center text-center">
-                <div class="flex flex-col items-center">
-                  <img src="${match.teams.home.logo}" class="w-10 h-10" />
-                  <span class="text-sm">${match.teams.home.name}</span>
-                </div>
-                <div class="text-xl font-bold">
-                  ${isPlayed ? `<span class='text-green-400'>${match.goals.home} - ${match.goals.away}</span>` : 'vs'}
-                </div>
-                <div class="flex flex-col items-center">
-                  <img src="${match.teams.away.logo}" class="w-10 h-10" />
-                  <span class="text-sm">${match.teams.away.name}</span>
-                </div>
-              </div>
-            </div>
-            <p class="text-center mt-4 text-sm text-gray-300">${new Date(match.fixture.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-          `;
-        } else {
-          card.className = "bg-card text-text p-4 rounded shadow flex flex-col justify-between h-full";
-          const score = match.score || 'vs';
-          card.innerHTML = `
-            <div>
-              <div class="flex items-center gap-4 mb-2">
-                <span class="text-sm">${match.competition}</span>
-              </div>
-              <div class="flex justify-between items-center text-center">
-                <span class="flex-1">${match.home_team}</span>
-                <div class="text-xl font-bold">${score}</div>
-                <span class="flex-1">${match.away_team}</span>
-              </div>
-            </div>
-            <p class="text-center mt-4 text-sm text-gray-300">${match.time}</p>
-          `;
-        }
-
-        container.appendChild(card);
-      });
-    }
-
-    const themeToggle = document.getElementById('themeToggle');
-    const reloadButton = document.getElementById('reloadButton');
-
-    function applyTheme() {
-      const theme = localStorage.getItem('theme') || 'dark';
-      if (theme === 'light') {
-        document.body.classList.add('light');
-        themeToggle.textContent = 'Modo Oscuro';
-      } else {
-        document.body.classList.remove('light');
-        themeToggle.textContent = 'Modo Claro';
-      }
-    }
-
-    themeToggle.onclick = () => {
-      const isLight = document.body.classList.toggle('light');
-      localStorage.setItem('theme', isLight ? 'light' : 'dark');
-      themeToggle.textContent = isLight ? 'Modo Oscuro' : 'Modo Claro';
+    const tabs = {
+      'yesterday': document.getElementById('btn-yesterday'),
+      'today': document.getElementById('btn-today'),
+      'tomorrow': document.getElementById('btn-tomorrow'),
     };
+    let currentTab = 'today';
 
-    reloadButton.onclick = () => loadData().then(fetchAndRenderMatches);
-
-    applyTheme();
-    loadData().then(() => {
-      generateDateButtons();
-      fetchAndRenderMatches();
+    const filters = Array.from(document.querySelectorAll('#league-filters button'));
+    filters.forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('selected');
+        loadMatches();
+      });
     });
+
+    Object.entries(tabs).forEach(([day, btn]) => {
+      btn.addEventListener('click', () => {
+        currentTab = day;
+        Object.values(tabs).forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        loadMatches();
+      });
+    });
+
+    function loadMatches() {
+      fetch('datos.json')
+        .then(r => r.json())
+        .then(data => {
+          const dateKeys = Object.keys(data).sort();
+          let dateIndex = currentTab === 'yesterday' ? 0
+                         : currentTab === 'today' ? 1
+                         : 2;
+          const date = dateKeys[dateIndex];
+          const leagueSet = new Set(filters.filter(b => b.classList.contains('selected')).map(b => b.dataset.league));
+
+          const matches = data[date] || [];
+          const container = document.getElementById('matches');
+          container.innerHTML = '';
+
+          matches
+            .filter(m => leagueSet.has(m.league.name))
+            .forEach(m => {
+              const el = document.createElement('div');
+              el.className = 'match';
+              el.innerHTML = `
+                <div class="team">
+                  <img src="${m.teams.home.logo || defaultLogo}" onerror="this.src='${defaultLogo}'" alt="">
+                  ${m.teams.home.name}
+                </div>
+                <div class="datetime">${new Date(m.fixture.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                <div class="team">
+                  <img src="${m.teams.away.logo || defaultLogo}" onerror="this.src='${defaultLogo}'" alt="">
+                  ${m.teams.away.name}
+                </div>
+              `;
+              container.appendChild(el);
+            });
+        });
+    }
+
+    // Load initial matches
+    loadMatches();
   </script>
+
 </body>
 </html>

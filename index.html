@@ -8,17 +8,14 @@
     .tabs button { margin: 0.2em; padding: 0.5em 1em; background: #444; border: none; border-radius: 4px; color: #ddd; }
     .tabs button.selected { background: #005f99; }
     .tabs button:not(.selected):hover { background: #555; }
-    .continent-group { margin-bottom: 1em; }
-    .continent-group h3 { color: #66c; margin-bottom: 0.5em; }
-    .country-group { margin-bottom: 0.5em; }
-    .country-group h4 { color: #99f; margin: 0.3em 0; }
-    .filters button { margin: 0.2em; padding: 0.4em 0.8em; background: #333; border: none; border-radius: 4px; color: #ddd; cursor: pointer; }
+    .filters { display: flex; flex-wrap: wrap; gap: 0.5em; margin-bottom: 1em; }
+    .filters button { padding: 0.4em 0.8em; background: #333; border: none; border-radius: 4px; color: #ddd; cursor: pointer; white-space: nowrap; }
     .filters button.selected { background: #005f99; }
     .filters button:not(.selected):hover { background: #444; }
-    .match { display: flex; align-items: center; justify-content: space-between; background: #282842; margin: 0.5em 0; padding: 0.8em; border-radius: 6px; }
-    .team { display: flex; align-items: center; }
-    .team img { width: 32px; height: 32px; margin-right: 0.5em; }
-    .datetime { color: #bbb; }
+    .match-table { width: 100%; border-collapse: collapse; margin-top: 1em; }
+    .match-table th, .match-table td { padding: 0.5em; text-align: center; border-bottom: 1px solid #444; }
+    .match-table th { background: #2a2a40; }
+    .match-table td img { width: 20px; height: 20px; vertical-align: middle; margin-right: 0.4em; }
   </style>
 </head>
 <body>
@@ -37,7 +34,7 @@
   <div id="matches"></div>
 
   <script>
-    const defaultLogo = 'https://via.placeholder.com/32?text=🏆';
+    const defaultLogo = 'https://via.placeholder.com/20?text=🏆';
 
     const tabs = {
       'yesterday': document.getElementById('btn-yesterday'),
@@ -68,57 +65,24 @@
           const dates = [getDateKey(-1), getDateKey(0), getDateKey(1)];
           const allMatches = dates.flatMap(d => data[d] || []);
 
-          const grouped = {};
+          const leagues = {};
           allMatches.forEach(m => {
-            const { name, country } = m.league;
-            const key = `${country} - ${name}`;
-            grouped[key] = { league: m.league, matches: [] };
-          });
-          allMatches.forEach(m => {
-            const { name, country } = m.league;
-            const key = `${country} - ${name}`;
-            grouped[key].matches.push(m);
-          });
-
-          const byContinent = {};
-          Object.values(grouped).forEach(g => {
-            const continent = g.league.country || 'Other';
-            const country = g.league.country;
-            if (!byContinent[continent]) byContinent[continent] = {};
-            if (!byContinent[continent][country]) byContinent[continent][country] = [];
-            byContinent[continent][country].push(g.league);
+            const key = m.league.name;
+            if (!leagues[key]) leagues[key] = m.league;
           });
 
           const filtersDiv = document.getElementById('league-filters');
           filtersDiv.innerHTML = '';
-          Object.entries(byContinent).forEach(([continent, countries]) => {
-            const groupDiv = document.createElement('div');
-            groupDiv.className = 'continent-group';
-            const h3 = document.createElement('h3');
-            h3.textContent = continent;
-            groupDiv.appendChild(h3);
-
-            Object.entries(countries).forEach(([country, leagues]) => {
-              const countryDiv = document.createElement('div');
-              countryDiv.className = 'country-group';
-              const h4 = document.createElement('h4');
-              h4.textContent = country;
-              countryDiv.appendChild(h4);
-              leagues.forEach(l => {
-                const btn = document.createElement('button');
-                btn.dataset.league = l.name;
-                btn.className = 'selected';
-                btn.textContent = l.name;
-                btn.addEventListener('click', () => {
-                  btn.classList.toggle('selected');
-                  loadMatchList();
-                });
-                countryDiv.appendChild(btn);
-              });
-              groupDiv.appendChild(countryDiv);
+          Object.values(leagues).forEach(l => {
+            const btn = document.createElement('button');
+            btn.dataset.league = l.name;
+            btn.className = 'selected';
+            btn.textContent = l.name;
+            btn.addEventListener('click', () => {
+              btn.classList.toggle('selected');
+              loadMatchList();
             });
-
-            filtersDiv.appendChild(groupDiv);
+            filtersDiv.appendChild(btn);
           });
 
           loadMatchList();
@@ -133,24 +97,34 @@
             const container = document.getElementById('matches');
             container.innerHTML = '';
 
+            if (matches.length === 0) {
+              container.innerHTML = '<p>No matches for this day.</p>';
+              return;
+            }
+
+            const table = document.createElement('table');
+            table.className = 'match-table';
+            table.innerHTML = `
+              <tr>
+                <th>Local</th>
+                <th>Hora</th>
+                <th>Visitante</th>
+              </tr>
+            `;
+
             matches
               .filter(m => leagueSet.has(m.league.name))
               .forEach(m => {
-                const el = document.createElement('div');
-                el.className = 'match';
-                el.innerHTML = `
-                  <div class="team">
-                    <img src="${m.teams.home.logo || defaultLogo}" onerror="this.src='${defaultLogo}'" alt="">
-                    ${m.teams.home.name}
-                  </div>
-                  <div class="datetime">${new Date(m.fixture.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                  <div class="team">
-                    <img src="${m.teams.away.logo || defaultLogo}" onerror="this.src='${defaultLogo}'" alt="">
-                    ${m.teams.away.name}
-                  </div>
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                  <td><img src="${m.teams.home.logo || defaultLogo}" onerror="this.src='${defaultLogo}'"> ${m.teams.home.name}</td>
+                  <td>${new Date(m.fixture.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                  <td><img src="${m.teams.away.logo || defaultLogo}" onerror="this.src='${defaultLogo}'"> ${m.teams.away.name}</td>
                 `;
-                container.appendChild(el);
+                table.appendChild(row);
               });
+
+            container.appendChild(table);
           }
         });
     }

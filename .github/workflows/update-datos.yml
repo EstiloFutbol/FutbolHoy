@@ -33,3 +33,5 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add datos.json
+          git diff --cached --quiet || git commit -m "Actualizar datos.json automáticamente"
+          git push

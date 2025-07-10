@@ -2,12 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Partidos de Fútbol</title>
+  <title>Estilo futbol</title>
   <style>
     body { background: #1e1e2f; color: #ddd; font-family: sans-serif; margin: 0; padding: 1rem; }
     .tabs button { margin: 0.2em; padding: 0.5em 1em; background: #444; border: none; border-radius: 4px; color: #ddd; }
     .tabs button.selected { background: #005f99; }
     .tabs button:not(.selected):hover { background: #555; }
+    .continent-group { margin-bottom: 1em; }
+    .continent-group h3 { color: #66c; margin-bottom: 0.5em; }
+    .country-group { margin-bottom: 0.5em; }
+    .country-group h4 { color: #99f; margin: 0.3em 0; }
     .filters button { margin: 0.2em; padding: 0.4em 0.8em; background: #333; border: none; border-radius: 4px; color: #ddd; cursor: pointer; }
     .filters button.selected { background: #005f99; }
     .filters button:not(.selected):hover { background: #444; }
@@ -19,21 +23,16 @@
 </head>
 <body>
 
-  <h1>⚽ Partidos de Fútbol</h1>
+  <h1>🌟 Estilo futbol 🌟</h1>
 
   <div class="tabs">
-    <button id="btn-yesterday">⟨ Yesterday</button>
+    <button id="btn-yesterday">Yesterday</button>
     <button id="btn-today" class="selected">Today</button>
-    <button id="btn-tomorrow">Tomorrow ⟩</button>
+    <button id="btn-tomorrow">Tomorrow</button>
   </div>
 
   <h2>Ligas & Copas</h2>
-  <div class="filters" id="league-filters">
-    <!-- Example buttons; adjust with your actual league list -->
-    <button data-league="Premier League" class="selected">Premier League</button>
-    <button data-league="UEFA Europa League" class="selected">Europa League</button>
-    <button data-league="La Liga" class="selected">La Liga</button>
-  </div>
+  <div class="filters" id="league-filters"></div>
 
   <div id="matches"></div>
 
@@ -47,14 +46,6 @@
     };
     let currentTab = 'today';
 
-    const filters = Array.from(document.querySelectorAll('#league-filters button'));
-    filters.forEach(btn => {
-      btn.addEventListener('click', () => {
-        btn.classList.toggle('selected');
-        loadMatches();
-      });
-    });
-
     Object.entries(tabs).forEach(([day, btn]) => {
       btn.addEventListener('click', () => {
         currentTab = day;
@@ -64,43 +55,106 @@
       });
     });
 
+    function getDateKey(offset) {
+      const d = new Date();
+      d.setUTCDate(d.getUTCDate() + offset);
+      return d.toISOString().split('T')[0];
+    }
+
     function loadMatches() {
       fetch('datos.json')
         .then(r => r.json())
         .then(data => {
-          const dateKeys = Object.keys(data).sort();
-          let dateIndex = currentTab === 'yesterday' ? 0
-                         : currentTab === 'today' ? 1
-                         : 2;
-          const date = dateKeys[dateIndex];
-          const leagueSet = new Set(filters.filter(b => b.classList.contains('selected')).map(b => b.dataset.league));
+          const dates = [getDateKey(-1), getDateKey(0), getDateKey(1)];
+          const allMatches = dates.flatMap(d => data[d] || []);
 
-          const matches = data[date] || [];
-          const container = document.getElementById('matches');
-          container.innerHTML = '';
+          const grouped = {};
+          allMatches.forEach(m => {
+            const { name, country } = m.league;
+            const key = `${country} - ${name}`;
+            grouped[key] = { league: m.league, matches: [] };
+          });
+          allMatches.forEach(m => {
+            const { name, country } = m.league;
+            const key = `${country} - ${name}`;
+            grouped[key].matches.push(m);
+          });
 
-          matches
-            .filter(m => leagueSet.has(m.league.name))
-            .forEach(m => {
-              const el = document.createElement('div');
-              el.className = 'match';
-              el.innerHTML = `
-                <div class="team">
-                  <img src="${m.teams.home.logo || defaultLogo}" onerror="this.src='${defaultLogo}'" alt="">
-                  ${m.teams.home.name}
-                </div>
-                <div class="datetime">${new Date(m.fixture.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                <div class="team">
-                  <img src="${m.teams.away.logo || defaultLogo}" onerror="this.src='${defaultLogo}'" alt="">
-                  ${m.teams.away.name}
-                </div>
-              `;
-              container.appendChild(el);
+          const byContinent = {};
+          Object.values(grouped).forEach(g => {
+            const continent = g.league.country || 'Other';
+            const country = g.league.country;
+            if (!byContinent[continent]) byContinent[continent] = {};
+            if (!byContinent[continent][country]) byContinent[continent][country] = [];
+            byContinent[continent][country].push(g.league);
+          });
+
+          const filtersDiv = document.getElementById('league-filters');
+          filtersDiv.innerHTML = '';
+          Object.entries(byContinent).forEach(([continent, countries]) => {
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'continent-group';
+            const h3 = document.createElement('h3');
+            h3.textContent = continent;
+            groupDiv.appendChild(h3);
+
+            Object.entries(countries).forEach(([country, leagues]) => {
+              const countryDiv = document.createElement('div');
+              countryDiv.className = 'country-group';
+              const h4 = document.createElement('h4');
+              h4.textContent = country;
+              countryDiv.appendChild(h4);
+              leagues.forEach(l => {
+                const btn = document.createElement('button');
+                btn.dataset.league = l.name;
+                btn.className = 'selected';
+                btn.textContent = l.name;
+                btn.addEventListener('click', () => {
+                  btn.classList.toggle('selected');
+                  loadMatchList();
+                });
+                countryDiv.appendChild(btn);
+              });
+              groupDiv.appendChild(countryDiv);
             });
+
+            filtersDiv.appendChild(groupDiv);
+          });
+
+          loadMatchList();
+
+          function loadMatchList() {
+            const date = currentTab === 'yesterday' ? getDateKey(-1)
+                         : currentTab === 'tomorrow' ? getDateKey(1)
+                         : getDateKey(0);
+
+            const leagueSet = new Set(Array.from(document.querySelectorAll('#league-filters button.selected')).map(b => b.dataset.league));
+            const matches = data[date] || [];
+            const container = document.getElementById('matches');
+            container.innerHTML = '';
+
+            matches
+              .filter(m => leagueSet.has(m.league.name))
+              .forEach(m => {
+                const el = document.createElement('div');
+                el.className = 'match';
+                el.innerHTML = `
+                  <div class="team">
+                    <img src="${m.teams.home.logo || defaultLogo}" onerror="this.src='${defaultLogo}'" alt="">
+                    ${m.teams.home.name}
+                  </div>
+                  <div class="datetime">${new Date(m.fixture.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                  <div class="team">
+                    <img src="${m.teams.away.logo || defaultLogo}" onerror="this.src='${defaultLogo}'" alt="">
+                    ${m.teams.away.name}
+                  </div>
+                `;
+                container.appendChild(el);
+              });
+          }
         });
     }
 
-    // Load initial matches
     loadMatches();
   </script>
 

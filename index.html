@@ -87,23 +87,30 @@ function loadMatches() {
   fetch('datos.json')
     .then(r => r.json())
     .then(data => {
-      const allowedLeagues = new Set([
-        "FIFA World Cup", "UEFA Euro", "UEFA Nations League", "FIFA Club World Cup",
-        "Olympic Football Tournament", "FIFA Women’s World Cup", "UEFA Women’s Euro",
-        "UEFA Champions League", "UEFA Europa League", "UEFA Europa Conference League",
-        "UEFA Super Cup", "UEFA Women’s Champions League", "La Liga", "Copa del Rey",
-        "Segunda División", "Supercopa de España", "Premier League", "FA Cup",
-        "EFL Cup", "Championship", "Community Shield", "Serie A", "Coppa Italia",
-        "Bundesliga", "DFB-Pokal", "Ligue 1", "Coupe de France", "Trophée des Champions",
-        "Club Friendlies"
-      ]);
+        const allowedLeagueIds = new Set([
+        // international
+          1, 3, 4, 7, 8, 9, 11,
+        // European club
+          2, 3, 4, 5, 8, 195,
+        // Spain
+          140, 141, 142, 156,
+        // England
+          39, 40, 41, 42, 45, 46,
+        // Italy
+          135, 136,
+        // Germany
+          78, 79,
+        // France
+          61, 62, 63
+        ]);
+        // add your “Men's club friendlies” ID too
 
       const dates = [getDateKey(-1), getDateKey(0), getDateKey(1)];
       const allMatches = dates.flatMap(d => data[d] || []);
 
       const leagues = {};
       allMatches.forEach(m => {
-        if (allowedLeagues.has(m.league.name)) {
+        if (allowedLeagueIds.has(m.league.id)) {
           const key = m.league.name;
           if (!leagues[key]) leagues[key] = m.league;
         }
@@ -113,6 +120,7 @@ function loadMatches() {
       filtersDiv.innerHTML = '';
       Object.values(leagues).forEach(l => {
         const btn = document.createElement('button');
+        btn.dataset.leagueId = l.id;
         btn.dataset.league = l.name;
         btn.className = 'selected';
         btn.textContent = l.name;

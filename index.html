@@ -41,7 +41,7 @@
     <div id="matches"></div>
     
     <script>
-    const defaultLogo = 'https://via.placeholder.com/20?text=🏆';
+    const defaultLogo = 'https://media.api-sports.io/football/teams/20000.png';
     
         const countryCodeMap = {
           Argentina: "ar", Brazil: "br", Chile: "cl", Colombia: "co", France: "fr",
@@ -166,7 +166,7 @@ function loadMatches() {
           title.className = 'competition-title';
           const flag = group.league.logo || defaultLogo;
           title.innerHTML = `
-            <div><img src="${flag}" onerror="this.src='${defaultLogo}'"> ${league}</div>
+            <div><img src="${m.teams.home.logo || defaultLogo}" onerror="this.src='${defaultLogo}'"> ${league}</div>
             <span class="arrow">▼</span>
           `;
           const table = document.createElement('table');

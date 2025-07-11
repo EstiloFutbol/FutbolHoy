@@ -43,144 +43,143 @@
     const defaultLogo = 'https://via.placeholder.com/20?text=🏆';
 
     const countryCodeMap = {
-      Argentina: "ar", Brazil: "br", Chile: "cl", Colombia: "co", France: "fr",
-      Germany: "de", Italy: "it", Mexico: "mx", Netherlands: "nl", Portugal: "pt",
-      Spain: "es", England: "gb", USA: "us", Uruguay: "uy", Peru: "pe",
-      Belgium: "be", Croatia: "hr", Denmark: "dk", Finland: "fi", Hungary: "hu",
-      Ireland: "ie", Israel: "il", Kazakhstan: "kz", Kosovo: "xk", Norway: "no",
-      Poland: "pl", Romania: "ro", Russia: "ru", Scotland: "gb-sct", Serbia: "rs",
-      Slovakia: "sk", Slovenia: "si", Sweden: "se", Switzerland: "ch", Turkey: "tr",
-      Ukraine: "ua", Wales: "gb-wls", Andorra: "ad", Cyprus: "cy", Gibraltar: "gi",
-      Estonia: "ee", Latvia: "lv", Lithuania: "lt", North_Macedonia: "mk", Georgia: "ge",
-      Armenia: "am", Bosnia_and_Herzegovina: "ba", Luxembourg: "lu", Iceland: "is"
+    Argentina: "ar", Brazil: "br", Chile: "cl", Colombia: "co", France: "fr",
+    Germany: "de", Italy: "it", Mexico: "mx", Netherlands: "nl", Portugal: "pt",
+    Spain: "es", England: "gb", USA: "us", Uruguay: "uy", Peru: "pe",
+    Belgium: "be", Croatia: "hr", Denmark: "dk", Finland: "fi", Hungary: "hu",
+    Ireland: "ie", Israel: "il", Kazakhstan: "kz", Kosovo: "xk", Norway: "no",
+    Poland: "pl", Romania: "ro", Russia: "ru", Scotland: "gb-sct", Serbia: "rs",
+    Slovakia: "sk", Slovenia: "si", Sweden: "se", Switzerland: "ch", Turkey: "tr",
+    Ukraine: "ua", Wales: "gb-wls", Andorra: "ad", Cyprus: "cy", Gibraltar: "gi",
+    Estonia: "ee", Latvia: "lv", Lithuania: "lt", North_Macedonia: "mk", Georgia: "ge",
+    Armenia: "am", Bosnia_and_Herzegovina: "ba", Luxembourg: "lu", Iceland: "is"
     };
 
     function getFlagURL(country) {
-      const code = countryCodeMap[country.replace(/ /g, '_')] || 'xx';
-      return `https://flagcdn.com/20x15/${code}.png`;
+    const code = countryCodeMap[country.replace(/ /g, '_')] || 'xx';
+    return `https://flagcdn.com/20x15/${code}.png`;
     }
 
-    const tabs = {
-      'yesterday': document.getElementById('btn-yesterday'),
-      'today': document.getElementById('btn-today'),
-      'tomorrow': document.getElementById('btn-tomorrow'),
-    };
-    let currentTab = 'today';
+    const allowedLeagues = new Map([
+    ["🌍 FIFA Tournaments", [
+        "FIFA World Cup", "FIFA Club World Cup", "Olympic Football Tournament", "FIFA Women’s World Cup"
+    ]],
+    ["🇪🇺 UEFA National Teams", [
+        "UEFA Euro", "UEFA Nations League", "UEFA Women’s Euro"
+    ]],
+    ["🇪🇺 UEFA Club", [
+        "UEFA Champions League", "UEFA Europa League", "UEFA Europa Conference League",
+        "UEFA Super Cup", "UEFA Women’s Champions League"
+    ]],
+    ["🇪🇸 Spain", [
+        "La Liga", "Copa del Rey", "Segunda División", "Supercopa de España"
+    ]],
+    ["🏴 England", [
+        "Premier League", "FA Cup", "EFL Cup", "Championship", "Community Shield"
+    ]],
+    ["🇮🇹 Italy", [
+        "Serie A", "Coppa Italia"
+    ]],
+    ["🇩🇪 Germany", [
+        "Bundesliga", "DFB-Pokal"
+    ]],
+    ["🇫🇷 France", [
+        "Ligue 1", "Coupe de France", "Trophée des Champions"
+    ]],
+    ["🤝 Friendlies", [
+        "Men´s club friendlies"
+    ]]
+    ]);
 
-    Object.entries(tabs).forEach(([day, btn]) => {
-      btn.addEventListener('click', () => {
-        currentTab = day;
-        Object.values(tabs).forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        loadMatches();
-      });
+    const allowedLeagueNames = new Set(
+    Array.from(allowedLeagues.values()).flat()
+    );
+
+    const leagueCategory = {};
+    allowedLeagues.forEach((leagues, category) => {
+    leagues.forEach(name => {
+        leagueCategory[name] = category;
+    });
     });
 
     function getDateKey(offset) {
-      const d = new Date();
-      d.setUTCDate(d.getUTCDate() + offset);
-      return d.toISOString().split('T')[0];
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() + offset);
+    return d.toISOString().split('T')[0];
     }
 
     function loadMatches() {
-      fetch('datos.json')
+    fetch('datos.json')
         .then(r => r.json())
         .then(data => {
-          const dates = [getDateKey(-1), getDateKey(0), getDateKey(1)];
-          const allMatches = dates.flatMap(d => data[d] || []);
+        const dates = [getDateKey(-1), getDateKey(0), getDateKey(1)];
+        const allMatches = dates.flatMap(d => data[d] || []);
 
-          const leagues = {};
-          allMatches.forEach(m => {
-            const key = m.league.name;
-            if (!leagues[key]) leagues[key] = m.league;
-          });
+        const matches = allMatches.filter(m => allowedLeagueNames.has(m.league.name));
+        const grouped = {};
+        matches.forEach(m => {
+            const cat = leagueCategory[m.league.name];
+            if (!grouped[cat]) grouped[cat] = {};
+            if (!grouped[cat][m.league.name]) grouped[cat][m.league.name] = [];
+            grouped[cat][m.league.name].push(m);
+        });
 
-          const filtersDiv = document.getElementById('league-filters');
-          filtersDiv.innerHTML = '';
-          Object.values(leagues).forEach(l => {
-            const btn = document.createElement('button');
-            btn.dataset.league = l.name;
-            btn.textContent = l.name;
-            btn.addEventListener('click', () => {
-              btn.classList.toggle('selected');
-              loadMatchList();
-            });
-            filtersDiv.appendChild(btn);
-          });
+        const container = document.getElementById('matches');
+        container.innerHTML = '';
 
-          loadMatchList();
+        Object.entries(grouped).forEach(([category, leagues]) => {
+            const catHeader = document.createElement('h3');
+            catHeader.textContent = category;
+            container.appendChild(catHeader);
 
-          function loadMatchList() {
-            const date = currentTab === 'yesterday' ? getDateKey(-1)
-                         : currentTab === 'tomorrow' ? getDateKey(1)
-                         : getDateKey(0);
+            Object.entries(leagues).forEach(([leagueName, matches]) => {
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'competition-group';
 
-            const leagueSet = new Set(Array.from(document.querySelectorAll('#league-filters button.selected')).map(b => b.dataset.league));
-            const matches = data[date] || [];
-            const container = document.getElementById('matches');
-            container.innerHTML = '';
-
-            if (matches.length === 0) {
-              container.innerHTML = '<p>No matches for this day.</p>';
-              return;
-            }
-
-            const grouped = {};
-            matches
-              .filter(m => leagueSet.size === 0 || leagueSet.has(m.league.name))
-              .forEach(m => {
-                const key = m.league.name;
-                if (!grouped[key]) grouped[key] = { league: m.league, matches: [] };
-                grouped[key].matches.push(m);
-              });
-
-            Object.entries(grouped).forEach(([league, group]) => {
-              const groupDiv = document.createElement('div');
-              groupDiv.className = 'competition-group';
-
-              const title = document.createElement('div');
-              title.className = 'competition-title';
-              const flag = getFlagURL(group.league.country);
-              title.innerHTML = `
-                <div><img src="${flag}" onerror="this.src='${defaultLogo}'"> ${league}</div>
+            const title = document.createElement('div');
+            title.className = 'competition-title';
+            const flag = getFlagURL(matches[0].league.country);
+            title.innerHTML = `
+                <div><img src="${flag}" onerror="this.src='${defaultLogo}'"> ${leagueName}</div>
                 <span class="arrow">▼</span>
-              `;
-              const table = document.createElement('table');
-              table.className = 'match-table hidden';
-              table.innerHTML = `
-                <tr>
-                  <th>Local</th>
-                  <th>Hora</th>
-                  <th>Visitante</th>
-                </tr>
-              `;
+            `;
 
-              group.matches.forEach(m => {
+            const table = document.createElement('table');
+            table.className = 'match-table hidden';
+            table.innerHTML = `
+                <tr>
+                <th>Local</th>
+                <th>Hora</th>
+                <th>Visitante</th>
+                </tr>
+            `;
+
+            matches.forEach(m => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                  <td><img src="${m.teams.home.logo || defaultLogo}" onerror="this.src='${defaultLogo}'"> ${m.teams.home.name}</td>
-                  <td>${new Date(m.fixture.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
-                  <td><img src="${m.teams.away.logo || defaultLogo}" onerror="this.src='${defaultLogo}'"> ${m.teams.away.name}</td>
+                <td><img src="${m.teams.home.logo || defaultLogo}" onerror="this.src='${defaultLogo}'"> ${m.teams.home.name}</td>
+                <td>${new Date(m.fixture.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                <td><img src="${m.teams.away.logo || defaultLogo}" onerror="this.src='${defaultLogo}'"> ${m.teams.away.name}</td>
                 `;
                 table.appendChild(row);
-              });
+            });
 
-              title.addEventListener('click', () => {
+            title.addEventListener('click', () => {
                 table.classList.toggle('hidden');
                 const arrow = title.querySelector('.arrow');
                 arrow.classList.toggle('rotate');
-              });
-
-              groupDiv.appendChild(title);
-              groupDiv.appendChild(table);
-              container.appendChild(groupDiv);
             });
-          }
+
+            groupDiv.appendChild(title);
+            groupDiv.appendChild(table);
+            container.appendChild(groupDiv);
+            });
+        });
         });
     }
 
     loadMatches();
-  </script>
+    </script>
 
 </body>
 </html>

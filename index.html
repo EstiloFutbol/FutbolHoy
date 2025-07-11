@@ -140,7 +140,7 @@ function loadMatches() {
           : getDateKey(0);
 
         const leagueSet = new Set(Array.from(document.querySelectorAll('#league-filters button.selected')).map(b => b.dataset.league));
-        const matches = (data[date] || []).filter(m => allowedLeagues.has(m.league.name));
+        const matches = (data[date] || []).filter(m => allowedLeagueIds.has(m.league.id));
         const container = document.getElementById('matches');
         container.innerHTML = '';
 
@@ -164,7 +164,7 @@ function loadMatches() {
 
           const title = document.createElement('div');
           title.className = 'competition-title';
-          const flag = getFlagURL(group.league.country);
+          const flag = group.league.logo || defaultLogo;
           title.innerHTML = `
             <div><img src="${flag}" onerror="this.src='${defaultLogo}'"> ${league}</div>
             <span class="arrow">▼</span>

@@ -1,200 +1,201 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Estilo futbol</title>
-<style>
-body { background: #1e1e2f; color: #ddd; font-family: sans-serif; margin: 0; padding: 1rem; }
-.tabs button { margin: 0.2em; padding: 0.5em 1em; background: #444; border: none; border-radius: 4px; color: #ddd; }
-.tabs button.selected { background: #005f99; }
-.tabs button:not(.selected):hover { background: #555; }
-.filters { display: flex; flex-wrap: wrap; gap: 0.5em; margin-bottom: 1em; }
-.filters button { padding: 0.4em 0.8em; background: #333; border: none; border-radius: 4px; color: #ddd; cursor: pointer; white-space: nowrap; }
-.filters button.selected { background: #005f99; }
-.filters button:not(.selected):hover { background: #444; }
-    .match-table { width: 100%; border-collapse: collapse; margin-top: 1em; }
-    .competition-group { margin-top: 2em; }
-    .competition-title { background: #2a2a40; padding: 0.5em; font-weight: bold; text-align: left; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
-    .competition-title img { width: 20px; height: 14px; margin-right: 0.5em; }
-    .arrow { display: inline-block; transition: transform 0.2s ease; }
-    .arrow.rotate { transform: rotate(180deg); }
-    .match-table { width: 100%; border-collapse: collapse; margin-top: 0.5em; }
-.match-table th, .match-table td { padding: 0.5em; text-align: center; border-bottom: 1px solid #444; }
-.match-table th { background: #2a2a40; }
-.match-table td img { width: 20px; height: 20px; vertical-align: middle; margin-right: 0.4em; }
-    .hidden { display: none; }
-</style>
+    <meta charset="UTF-8" />
+    <title>Estilo futbol</title>
+    <style>
+    body { background: #1e1e2f; color: #ddd; font-family: sans-serif; margin: 0; padding: 1rem; }
+    .tabs button { margin: 0.2em; padding: 0.5em 1em; background: #444; border: none; border-radius: 4px; color: #ddd; }
+    .tabs button.selected { background: #005f99; }
+    .tabs button:not(.selected):hover { background: #555; }
+    .filters { display: flex; flex-wrap: wrap; gap: 0.5em; margin-bottom: 1em; }
+    .filters button { padding: 0.4em 0.8em; background: #333; border: none; border-radius: 4px; color: #ddd; cursor: pointer; white-space: nowrap; }
+    .filters button.selected { background: #005f99; }
+    .filters button:not(.selected):hover { background: #444; }
+        .match-table { width: 100%; border-collapse: collapse; margin-top: 1em; }
+        .competition-group { margin-top: 2em; }
+        .competition-title { background: #2a2a40; padding: 0.5em; font-weight: bold; text-align: left; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+        .competition-title img { width: 20px; height: 14px; margin-right: 0.5em; }
+        .arrow { display: inline-block; transition: transform 0.2s ease; }
+        .arrow.rotate { transform: rotate(180deg); }
+        .match-table { width: 100%; border-collapse: collapse; margin-top: 0.5em; }
+    .match-table th, .match-table td { padding: 0.5em; text-align: center; border-bottom: 1px solid #444; }
+    .match-table th { background: #2a2a40; }
+    .match-table td img { width: 20px; height: 20px; vertical-align: middle; margin-right: 0.4em; }
+        .hidden { display: none; }
+    </style>
 </head>
 <body>
-
-<h1>🌟 Estilo futbol 🌟</h1>
-
-<div class="tabs">
-<button id="btn-yesterday">Yesterday</button>
-<button id="btn-today" class="selected">Today</button>
-<button id="btn-tomorrow">Tomorrow</button>
-</div>
-
-<h2>Ligas & Copas</h2>
-<div class="filters" id="league-filters"></div>
-
-<div id="matches"></div>
-
-<script>
-const defaultLogo = 'https://via.placeholder.com/20?text=🏆';
-
-    const countryCodeMap = {
-      Argentina: "ar", Brazil: "br", Chile: "cl", Colombia: "co", France: "fr",
-      Germany: "de", Italy: "it", Mexico: "mx", Netherlands: "nl", Portugal: "pt",
-      Spain: "es", England: "gb", USA: "us", Uruguay: "uy", Peru: "pe",
-      Belgium: "be", Croatia: "hr", Denmark: "dk", Finland: "fi", Hungary: "hu",
-      Ireland: "ie", Israel: "il", Kazakhstan: "kz", Kosovo: "xk", Norway: "no",
-      Poland: "pl", Romania: "ro", Russia: "ru", Scotland: "gb-sct", Serbia: "rs",
-      Slovakia: "sk", Slovenia: "si", Sweden: "se", Switzerland: "ch", Turkey: "tr",
-      Ukraine: "ua", Wales: "gb-wls", Andorra: "ad", Cyprus: "cy", Gibraltar: "gi",
-      Estonia: "ee", Latvia: "lv", Lithuania: "lt", North_Macedonia: "mk", Georgia: "ge",
-      Armenia: "am", Bosnia_and_Herzegovina: "ba", Luxembourg: "lu", Iceland: "is"
+    
+    <h1>🌟 Estilo futbol 🌟</h1>
+    
+    <div class="tabs">
+    <button id="btn-yesterday">Yesterday</button>
+    <button id="btn-today" class="selected">Today</button>
+    <button id="btn-tomorrow">Tomorrow</button>
+    </div>
+    
+    <h2>Ligas & Copas</h2>
+    <div class="filters" id="league-filters"></div>
+    
+    <div id="matches"></div>
+    
+    <script>
+    const defaultLogo = 'https://via.placeholder.com/20?text=🏆';
+    
+        const countryCodeMap = {
+          Argentina: "ar", Brazil: "br", Chile: "cl", Colombia: "co", France: "fr",
+          Germany: "de", Italy: "it", Mexico: "mx", Netherlands: "nl", Portugal: "pt",
+          Spain: "es", England: "gb", USA: "us", Uruguay: "uy", Peru: "pe",
+          Belgium: "be", Croatia: "hr", Denmark: "dk", Finland: "fi", Hungary: "hu",
+          Ireland: "ie", Israel: "il", Kazakhstan: "kz", Kosovo: "xk", Norway: "no",
+          Poland: "pl", Romania: "ro", Russia: "ru", Scotland: "gb-sct", Serbia: "rs",
+          Slovakia: "sk", Slovenia: "si", Sweden: "se", Switzerland: "ch", Turkey: "tr",
+          Ukraine: "ua", Wales: "gb-wls", Andorra: "ad", Cyprus: "cy", Gibraltar: "gi",
+          Estonia: "ee", Latvia: "lv", Lithuania: "lt", North_Macedonia: "mk", Georgia: "ge",
+          Armenia: "am", Bosnia_and_Herzegovina: "ba", Luxembourg: "lu", Iceland: "is"
+        };
+    
+        function getFlagURL(country) {
+          const code = countryCodeMap[country.replace(/ /g, '_')] || 'xx';
+          return `https://flagcdn.com/20x15/${code}.png`;
+        }
+    
+    const tabs = {
+    'yesterday': document.getElementById('btn-yesterday'),
+    'today': document.getElementById('btn-today'),
+    'tomorrow': document.getElementById('btn-tomorrow'),
     };
+    let currentTab = 'today';
+    
+    Object.entries(tabs).forEach(([day, btn]) => {
+    btn.addEventListener('click', () => {
+    currentTab = day;
+    Object.values(tabs).forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    loadMatches();
+    });
+    });
 
-    function getFlagURL(country) {
-      const code = countryCodeMap[country.replace(/ /g, '_')] || 'xx';
-      return `https://flagcdn.com/20x15/${code}.png`;
+    function getDateKey(offset) {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() + offset);
+    return d.toISOString().split('T')[0];
     }
 
-const tabs = {
-'yesterday': document.getElementById('btn-yesterday'),
-'today': document.getElementById('btn-today'),
-'tomorrow': document.getElementById('btn-tomorrow'),
-};
-let currentTab = 'today';
-
-Object.entries(tabs).forEach(([day, btn]) => {
-btn.addEventListener('click', () => {
-currentTab = day;
-Object.values(tabs).forEach(b => b.classList.remove('selected'));
-btn.classList.add('selected');
-loadMatches();
-});
-});
-
-function getDateKey(offset) {
-const d = new Date();
-d.setUTCDate(d.getUTCDate() + offset);
-return d.toISOString().split('T')[0];
-}
-
 function loadMatches() {
-fetch('datos.json')
-.then(r => r.json())
-.then(data => {
-const dates = [getDateKey(-1), getDateKey(0), getDateKey(1)];
-const allMatches = dates.flatMap(d => data[d] || []);
+  fetch('datos.json')
+    .then(r => r.json())
+    .then(data => {
+      const allowedLeagues = new Set([
+        "FIFA World Cup", "UEFA Euro", "UEFA Nations League", "FIFA Club World Cup",
+        "Olympic Football Tournament", "FIFA Women’s World Cup", "UEFA Women’s Euro",
+        "UEFA Champions League", "UEFA Europa League", "UEFA Europa Conference League",
+        "UEFA Super Cup", "UEFA Women’s Champions League", "La Liga", "Copa del Rey",
+        "Segunda División", "Supercopa de España", "Premier League", "FA Cup",
+        "EFL Cup", "Championship", "Community Shield", "Serie A", "Coppa Italia",
+        "Bundesliga", "DFB-Pokal", "Ligue 1", "Coupe de France", "Trophée des Champions",
+        "Club Friendlies"
+      ]);
 
-const leagues = {};
-allMatches.forEach(m => {
-const key = m.league.name;
-if (!leagues[key]) leagues[key] = m.league;
-});
+      const dates = [getDateKey(-1), getDateKey(0), getDateKey(1)];
+      const allMatches = dates.flatMap(d => data[d] || []);
 
-const filtersDiv = document.getElementById('league-filters');
-filtersDiv.innerHTML = '';
-Object.values(leagues).forEach(l => {
-const btn = document.createElement('button');
-btn.dataset.league = l.name;
-            btn.className = 'selected';
-btn.textContent = l.name;
-btn.addEventListener('click', () => {
-btn.classList.toggle('selected');
-loadMatchList();
-});
-filtersDiv.appendChild(btn);
-});
+      const leagues = {};
+      allMatches.forEach(m => {
+        if (allowedLeagues.has(m.league.name)) {
+          const key = m.league.name;
+          if (!leagues[key]) leagues[key] = m.league;
+        }
+      });
 
-loadMatchList();
+      const filtersDiv = document.getElementById('league-filters');
+      filtersDiv.innerHTML = '';
+      Object.values(leagues).forEach(l => {
+        const btn = document.createElement('button');
+        btn.dataset.league = l.name;
+        btn.className = 'selected';
+        btn.textContent = l.name;
+        btn.addEventListener('click', () => {
+          btn.classList.toggle('selected');
+          loadMatchList();
+        });
+        filtersDiv.appendChild(btn);
+      });
 
-function loadMatchList() {
-const date = currentTab === 'yesterday' ? getDateKey(-1)
-: currentTab === 'tomorrow' ? getDateKey(1)
-: getDateKey(0);
+      loadMatchList();
 
-const leagueSet = new Set(Array.from(document.querySelectorAll('#league-filters button.selected')).map(b => b.dataset.league));
-const matches = data[date] || [];
-const container = document.getElementById('matches');
-container.innerHTML = '';
+      function loadMatchList() {
+        const date = currentTab === 'yesterday' ? getDateKey(-1)
+          : currentTab === 'tomorrow' ? getDateKey(1)
+          : getDateKey(0);
 
-if (matches.length === 0) {
-container.innerHTML = '<p>No matches for this day.</p>';
-return;
-}
+        const leagueSet = new Set(Array.from(document.querySelectorAll('#league-filters button.selected')).map(b => b.dataset.league));
+        const matches = (data[date] || []).filter(m => allowedLeagues.has(m.league.name));
+        const container = document.getElementById('matches');
+        container.innerHTML = '';
 
-            const table = document.createElement('table');
-            table.className = 'match-table';
-            table.innerHTML = `
-              <tr>
-                <th>Local</th>
-                <th>Hora</th>
-                <th>Visitante</th>
-              </tr>
+        if (matches.length === 0) {
+          container.innerHTML = '<p>No matches for this day.</p>';
+          return;
+        }
+
+        const grouped = {};
+        matches
+          .filter(m => leagueSet.has(m.league.name))
+          .forEach(m => {
+            const key = m.league.name;
+            if (!grouped[key]) grouped[key] = { league: m.league, matches: [] };
+            grouped[key].matches.push(m);
+          });
+
+        Object.entries(grouped).forEach(([league, group]) => {
+          const groupDiv = document.createElement('div');
+          groupDiv.className = 'competition-group';
+
+          const title = document.createElement('div');
+          title.className = 'competition-title';
+          const flag = getFlagURL(group.league.country);
+          title.innerHTML = `
+            <div><img src="${flag}" onerror="this.src='${defaultLogo}'"> ${league}</div>
+            <span class="arrow">▼</span>
+          `;
+          const table = document.createElement('table');
+          table.className = 'match-table hidden';
+          table.innerHTML = `
+            <tr>
+              <th>Local</th>
+              <th>Hora</th>
+              <th>Visitante</th>
+            </tr>
+          `;
+
+          group.matches.forEach(m => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td><img src="${m.teams.home.logo || defaultLogo}" onerror="this.src='${defaultLogo}'"> ${m.teams.home.name}</td>
+              <td>${new Date(m.fixture.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+              <td><img src="${m.teams.away.logo || defaultLogo}" onerror="this.src='${defaultLogo}'"> ${m.teams.away.name}</td>
             `;
+            table.appendChild(row);
+          });
 
-            const grouped = {};
-matches
-              .filter(m => leagueSet.has(m.league.name))
-              .filter(m => leagueSet.size === 0 || leagueSet.has(m.league.name))
-.forEach(m => {
-                const key = m.league.name;
-                if (!grouped[key]) grouped[key] = { league: m.league, matches: [] };
-                grouped[key].matches.push(m);
-              });
+          title.addEventListener('click', () => {
+            table.classList.toggle('hidden');
+            const arrow = title.querySelector('.arrow');
+            arrow.classList.toggle('rotate');
+          });
 
-            Object.entries(grouped).forEach(([league, group]) => {
-              const groupDiv = document.createElement('div');
-              groupDiv.className = 'competition-group';
-
-              const title = document.createElement('div');
-              title.className = 'competition-title';
-              const flag = getFlagURL(group.league.country);
-              title.innerHTML = `
-                <div><img src="${flag}" onerror="this.src='${defaultLogo}'"> ${league}</div>
-                <span class="arrow">▼</span>
-              `;
-              const table = document.createElement('table');
-              table.className = 'match-table hidden';
-              table.innerHTML = `
-                <tr>
-                  <th>Local</th>
-                  <th>Hora</th>
-                  <th>Visitante</th>
-                </tr>
-              `;
-
-              group.matches.forEach(m => {
-const row = document.createElement('tr');
-row.innerHTML = `
-                 <td><img src="${m.teams.home.logo || defaultLogo}" onerror="this.src='${defaultLogo}'"> ${m.teams.home.name}</td>
-                 <td>${new Date(m.fixture.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
-                 <td><img src="${m.teams.away.logo || defaultLogo}" onerror="this.src='${defaultLogo}'"> ${m.teams.away.name}</td>
-               `;
-table.appendChild(row);
-});
-
-            container.appendChild(table);
-              title.addEventListener('click', () => {
-                table.classList.toggle('hidden');
-                const arrow = title.querySelector('.arrow');
-                arrow.classList.toggle('rotate');
-              });
-
-              groupDiv.appendChild(title);
-              groupDiv.appendChild(table);
-              container.appendChild(groupDiv);
-            });
-}
-});
+          groupDiv.appendChild(title);
+          groupDiv.appendChild(table);
+          container.appendChild(groupDiv);
+        });
+      }
+    });
 }
 
-loadMatches();
-</script>
+    loadMatches();
+    </script>
 
 </body>
 </html>

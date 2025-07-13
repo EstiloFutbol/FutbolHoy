@@ -24,40 +24,26 @@
     .match-table td img { width: 20px; height: 20px; vertical-align: middle; margin-right: 0.4em; }
         .hidden { display: none; }
     </style>
-    <style>
-    :root { --bg:#000; --text:#e0e0e0; --btn-bg:#222; --btn-selected:#0066cc; --section-bg:#111; --border:#333; --btn-border:#444; }
-    :root.light { --bg:#fdfdfd; --text:#222; --btn-bg:#e0e0e0; --btn-selected:#0077cc; --section-bg:#f0f0f0; --border:#ccc; }
-
-    /* Override elements to use CSS variables */
-    body { background: var(--bg); color: var(--text); }
-    .tabs button, .filters button { background: var(--btn-bg); color: var(--text); border: 1px solid var(--btn-border); border-radius: 4px; transition: background 0.2s, transform 0.1s; }
-    .tabs button.selected, .filters button.selected { background: var(--btn-selected); color:#fff; }
-    .tabs button:not(.selected):hover, .filters button:not(.selected):hover { filter: brightness(1.1); }
-    .competition-title, .match-table th { background: var(--section-bg); }
-    .match-table th, .match-table td { border-bottom: 1px solid var(--border); }
-
-    /* Theme toggle button */
-    #theme-toggle { position: fixed; top: 1rem; right: 1rem; background: var(--btn-bg); color: var(--text); border: 1px solid var(--btn-border); border-radius: 4px; padding: 0.5em 0.8em; cursor: pointer; z-index: 1000; }
-    #theme-toggle:hover { background: var(--btn-selected); }
-
-    /* Responsive tweaks */
-    @media (max-width: 600px) {
-        .tabs button, .filters button { padding: 0.4em 0.6em; font-size: 0.9rem; }
-        .match-table th, .match-table td { padding: 0.3em; font-size: 0.85rem; }
-        h1 { font-size: 2rem; font-family:'Segoe UI','Roboto',sans-serif; font-weight:600; text-align:center; color: var(--btn-selected); margin:0.5rem 0 1rem; }
-    }
-    </style>
+<style>
+:root { --bg:#000; --text:#e0e0e0; --btn-bg:#222; --btn-selected:#0066cc; --section-bg:#111; --border:#333; --btn-border:#444; }
+:root.light { --bg:#fdfdfd; --text:#222; --btn-bg:#e0e0e0; --btn-selected:#0077cc; --section-bg:#f0f0f0; --border:#ccc; }
+body{background:var(--bg);color:var(--text)}
+.page-header{background:var(--section-bg);padding:1rem;border-radius:6px;margin-bottom:1rem;text-align:center}
+.page-header h1{margin:0;font-size:2rem;font-weight:600;color:var(--text)}
+#theme-toggle{position:fixed;top:1rem;right:1rem;background:var(--btn-bg);color:var(--text);border:1px solid var(--btn-border);border-radius:4px;padding:.5em .8em;cursor:pointer;z-index:1000}
+#theme-toggle:hover{background:var(--btn-selected)}
+.date-bar{display:flex;align-items:center;justify-content:center;gap:1rem;background:var(--section-bg);padding:.5rem 1rem;border-radius:8px;margin-bottom:1rem}
+.date-bar button{background:var(--btn-bg);color:var(--text);border:1px solid var(--btn-border);border-radius:50%;width:32px;height:32px;font-size:1rem;cursor:pointer}
+.date-bar button:hover{background:var(--btn-selected);color:#fff}
+#date-label{font-weight:600}
+</style>
 </head>
 <body>
     
-    <h1>🌟 Estilo futbol 🌟</h1>
+    <header class="page-header"><h1>Estilo Futbol</h1></header>
 <button id="theme-toggle" aria-label="Toggle theme">☀️ Light</button>
     
-    <div class="tabs">
-    <button id="btn-yesterday">Yesterday</button>
-    <button id="btn-today" class="selected">Today</button>
-    <button id="btn-tomorrow">Tomorrow</button>
-    </div>
+    <div class="date-bar"><button id="prev-date">←</button><span id="date-label">Today</span><button id="next-date">→</button></div>
     
     <h2>Ligas & Copas</h2>
     <div class="filters" id="league-filters"></div>
@@ -66,22 +52,6 @@
     
     <script>
     const defaultLogo = 'https://media.api-sports.io/football/teams/20000.png';
-
-// ===== Theme toggle logic =====
-const themeBtn = document.getElementById('theme-toggle');
-function applyTheme(theme) {
-  document.documentElement.classList.toggle('light', theme === 'light');
-  themeBtn.textContent = theme === 'light' ? '🌙 Dark' : '☀️ Light';
-  localStorage.setItem('theme', theme);
-}
-const storedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
-applyTheme(storedTheme);
-
-themeBtn.addEventListener('click', () => {
-  const newTheme = document.documentElement.classList.contains('light') ? 'dark' : 'light';
-  applyTheme(newTheme);
-});
-// ==============================
     
         const countryCodeMap = {
           Argentina: "ar", Brazil: "br", Chile: "cl", Colombia: "co", France: "fr",
@@ -101,27 +71,24 @@ themeBtn.addEventListener('click', () => {
           return `https://flagcdn.com/20x15/${code}.png`;
         }
     
-    const tabs = {
-    'yesterday': document.getElementById('btn-yesterday'),
-    'today': document.getElementById('btn-today'),
-    'tomorrow': document.getElementById('btn-tomorrow'),
-    };
-    let currentTab = 'today';
-    
-    Object.entries(tabs).forEach(([day, btn]) => {
-    btn.addEventListener('click', () => {
-    currentTab = day;
-    Object.values(tabs).forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
-    loadMatches();
-    });
-    });
+    // ===== Theme toggle =====
+const themeBtn=document.getElementById('theme-toggle');
+function applyTheme(t){document.documentElement.classList.toggle('light',t==='light');themeBtn.textContent=t==='light'? '🌙 Dark':'☀️ Light';localStorage.setItem('theme',t);}const storedTheme=localStorage.getItem('theme')|| (window.matchMedia('(prefers-color-scheme: light)').matches? 'light':'dark');applyTheme(storedTheme);themeBtn.addEventListener('click',()=>{applyTheme(document.documentElement.classList.contains('light')?'dark':'light');});
+// ===== Date navigation =====
 
-    function getDateKey(offset) {
-    const d = new Date();
-    d.setUTCDate(d.getUTCDate() + offset);
-    return d.toISOString().split('T')[0];
-    }
+const dateLabel=document.getElementById('date-label');
+function updateDateBar(){const names={'-1':'Yesterday','0':'Today','1':'Tomorrow'};dateLabel.textContent=names[currentOffset]|| new Date(new Date().setUTCDate(new Date().getUTCDate()+currentOffset)).toISOString().split('T')[0];}
+document.getElementById('prev-date').addEventListener('click',()=>{currentOffset--;updateDateBar();loadMatches();});
+document.getElementById('next-date').addEventListener('click',()=>{currentOffset++;updateDateBar();loadMatches();});
+updateDateBar();
+
+let currentOffset=0;
+
+function getDateKey(offset){
+  const d=new Date();
+  d.setUTCDate(d.getUTCDate()+offset);
+  return d.toISOString().split('T')[0];
+}
 
 function loadMatches() {
   fetch('datos.json')
@@ -175,9 +142,7 @@ function loadMatches() {
       loadMatchList();
 
       function loadMatchList() {
-        const date = currentTab === 'yesterday' ? getDateKey(-1)
-          : currentTab === 'tomorrow' ? getDateKey(1)
-          : getDateKey(0);
+        const date = getDateKey(currentOffset);
 
         const leagueSet = new Set(Array.from(document.querySelectorAll('#league-filters button.selected')).map(b => b.dataset.league));
         const matches = (data[date] || []).filter(m => allowedLeagueIds.has(m.league.id));

@@ -28,20 +28,16 @@
 :root { --bg:#000; --text:#e0e0e0; --btn-bg:#222; --btn-selected:#0066cc; --section-bg:#111; --border:#333; --btn-border:#444; }
 :root.light { --bg:#fdfdfd; --text:#222; --btn-bg:#e0e0e0; --btn-selected:#0077cc; --section-bg:#f0f0f0; --border:#ccc; }
 body{background:var(--bg);color:var(--text)}
-.page-header{background:var(--section-bg);padding:1rem;border-radius:6px;margin-bottom:1rem;text-align:center}
-.page-header h1{margin:0;font-size:2rem;font-weight:600;color:var(--text)}
-#theme-toggle{position:fixed;top:1rem;right:1rem;background:var(--btn-bg);color:var(--text);border:1px solid var(--btn-border);border-radius:4px;padding:.5em .8em;cursor:pointer;z-index:1000}
+.page-header{background:var(--section-bg);padding:1rem;border-radius:6px;margin-bottom:1rem;text-align:center;position:relative}
+.page-header h1{margin:0;font-size:2rem;font-weight:600;color:var(--text);display:inline-block}
+#theme-toggle{position:absolute;top:50%;right:1rem;transform:translateY(-50%);background:var(--btn-bg);color:var(--text);border:1px solid var(--btn-border);border-radius:50%;padding:.5em;cursor:pointer;z-index:1000}
 #theme-toggle:hover{background:var(--btn-selected)}
-.date-bar{display:flex;align-items:center;justify-content:center;gap:1rem;background:var(--section-bg);padding:.5rem 1rem;border-radius:8px;margin-bottom:1rem}
-.date-bar button{background:var(--btn-bg);color:var(--text);border:1px solid var(--btn-border);border-radius:50%;width:32px;height:32px;font-size:1rem;cursor:pointer}
-.date-bar button:hover{background:var(--btn-selected);color:#fff}
-#date-label{font-weight:600}
+.date-bar{display:flex;align-items:center;justify-content:space-between;gap:1rem;background:var(--section-bg);padding:.5rem 0.5rem;width:50%;margin:0 auto;border-radius:8px;margin-bottom:1rem}
 </style>
 </head>
 <body>
     
-    <header class="page-header"><h1>Estilo Futbol</h1></header>
-<button id="theme-toggle" aria-label="Toggle theme">☀️ Light</button>
+    <header class="page-header"><h1>Estilo Futbol</h1><button id="theme-toggle" aria-label="Toggle theme">☀️🌙</button></header>
     
     <div class="date-bar"><button id="prev-date">←</button><span id="date-label">Today</span><button id="next-date">→</button></div>
     
@@ -73,7 +69,7 @@ body{background:var(--bg);color:var(--text)}
     
     // ===== Theme toggle =====
 const themeBtn=document.getElementById('theme-toggle');
-function applyTheme(t){document.documentElement.classList.toggle('light',t==='light');themeBtn.textContent=t==='light'? '🌙 Dark':'☀️ Light';localStorage.setItem('theme',t);}const storedTheme=localStorage.getItem('theme')|| (window.matchMedia('(prefers-color-scheme: light)').matches? 'light':'dark');applyTheme(storedTheme);themeBtn.addEventListener('click',()=>{applyTheme(document.documentElement.classList.contains('light')?'dark':'light');});
+function applyTheme(t){document.documentElement.classList.toggle('light',t==='light');themeBtn.textContent=t==='light'? '🌙':'☀️';localStorage.setItem('theme',t);}const storedTheme=localStorage.getItem('theme')|| (window.matchMedia('(prefers-color-scheme: light)').matches? 'light':'dark');applyTheme(storedTheme);themeBtn.addEventListener('click',()=>{applyTheme(document.documentElement.classList.contains('light')?'dark':'light');});
 // ===== Date navigation =====
 
 const dateLabel=document.getElementById('date-label');

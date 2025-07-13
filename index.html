@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Estilo futbol</title>
+    <title>Estilo Futbol</title>
     <style>
     body { background: #1e1e2f; color: #ddd; font-family: sans-serif; margin: 0; padding: 1rem; }
     .tabs button { margin: 0.2em; padding: 0.5em 1em; background: #444; border: none; border-radius: 4px; color: #ddd; }
@@ -140,7 +140,8 @@ function loadMatches(){
     .then(data=>{
       const date=getDateKey(currentOffset);
       const excludedLeagues=new Set(['USL League One','Liga Pro','USL League Two','Major League Soccer','USL Championship','Primera División','Liga MX','Copa Nicaragua','Primera A','Liga MX Femenil','Northern NSW NPL','NNSW League 1',
-      'MLS Next Pro','Liga Profesional Argentina','Canadian Premier LEague','Calcutta Premier Division','Brisbane Premier League','2. Division - Group 1','Veikkausliiga','Coppa','Kakkonen - Lohko B','3. Division - Girone 2','Esiliiga A','Liga I','3. Division - Girone 3','Allsvenskan','A lyga','Carioca C','Primera C','Paulista - U20','Division Intermedia']);
+      'MLS Next Pro','Liga Profesional Argentina','Canadian Premier LEague','Calcutta Premier Division','Brisbane Premier League','2. Division - Group 1','Veikkausliiga','Coppa','Kakkonen - Lohko B','3. Division - Girone 2','Esiliiga A','Liga I','3. Division - Girone 3','Allsvenskan','A lyga','Carioca C','Primera C','Paulista - U20','Division Intermedia',
+      'Queensland NPL','NEW South Wales NPL','Capital Territory NPL','Japan Football League','K3 League','K League 2','Meistriliiga','Esiliiga B','COSAFA U20 Championship','Super League','Alagoano U20','Piala Presiden','3. Division - Girone 1','U20','Asian Cup Women - Qualification','Copa Paulista','Goiano - 2','Premier Soccer League','Paulista Série B','Sudani Premier League','Kakkonen - Lohko C']);
       const matches=(data[date]||[]);
       const matchesContainer=document.getElementById('matches');
       const filtersContainer=document.getElementById('league-filters');
@@ -148,16 +149,19 @@ function loadMatches(){
       const leagueSet=new Set();
       matches.forEach(match=>{
         if(!leagueSet.has(match.league.id)&&!excludedLeagues.has(match.league.name)){
-          const btn=document.createElement('button');
-          btn.className='competition-button';
-          btn.innerHTML=`<img src="${match.league.logo}" onerror="this.src='${defaultLogo}'"> ${match.league.name}`;
-          btn.addEventListener('click',()=>{
-            btn.classList.toggle('selected');
-            updateMatches();
-          });
-          filtersContainer.appendChild(btn);
-          leagueSet.add(match.league.id);
+          leagueSet.add(match.league.name);
         }
+      });
+      Array.from(leagueSet).sort().forEach(leagueName=>{
+        const match=matches.find(m=>m.league.name===leagueName);
+        const btn=document.createElement('button');
+        btn.className='competition-button';
+        btn.innerHTML=`<img src="${match.league.logo}" onerror="this.src='${defaultLogo}'"> ${match.league.name}`;
+        btn.addEventListener('click',()=>{
+          btn.classList.toggle('selected');
+          updateMatches();
+        });
+        filtersContainer.appendChild(btn);
       });
       function updateMatches(){
         matchesContainer.innerHTML='';

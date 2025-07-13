@@ -25,26 +25,26 @@
         .hidden { display: none; }
     </style>
     <style>
-    :root { --bg:#1e1e2f; --text:#ddd; --btn-bg:#444; --btn-selected:#005f99; --section-bg:#2a2a40; --border:#444; }
+    :root { --bg:#000; --text:#e0e0e0; --btn-bg:#222; --btn-selected:#0066cc; --section-bg:#111; --border:#333; --btn-border:#444; }
     :root.light { --bg:#fdfdfd; --text:#222; --btn-bg:#e0e0e0; --btn-selected:#0077cc; --section-bg:#f0f0f0; --border:#ccc; }
 
     /* Override elements to use CSS variables */
     body { background: var(--bg); color: var(--text); }
-    .tabs button, .filters button { background: var(--btn-bg); color: var(--text); }
-    .tabs button.selected, .filters button.selected { background: var(--btn-selected); }
+    .tabs button, .filters button { background: var(--btn-bg); color: var(--text); border: 1px solid var(--btn-border); border-radius: 4px; transition: background 0.2s, transform 0.1s; }
+    .tabs button.selected, .filters button.selected { background: var(--btn-selected); color:#fff; }
     .tabs button:not(.selected):hover, .filters button:not(.selected):hover { filter: brightness(1.1); }
     .competition-title, .match-table th { background: var(--section-bg); }
     .match-table th, .match-table td { border-bottom: 1px solid var(--border); }
 
     /* Theme toggle button */
-    #theme-toggle { position: fixed; top: 1rem; right: 1rem; background: var(--btn-bg); color: var(--text); border: none; border-radius: 4px; padding: 0.5em 0.8em; cursor: pointer; z-index: 1000; }
+    #theme-toggle { position: fixed; top: 1rem; right: 1rem; background: var(--btn-bg); color: var(--text); border: 1px solid var(--btn-border); border-radius: 4px; padding: 0.5em 0.8em; cursor: pointer; z-index: 1000; }
     #theme-toggle:hover { background: var(--btn-selected); }
 
     /* Responsive tweaks */
     @media (max-width: 600px) {
         .tabs button, .filters button { padding: 0.4em 0.6em; font-size: 0.9rem; }
         .match-table th, .match-table td { padding: 0.3em; font-size: 0.85rem; }
-        h1 { font-size: 1.4rem; }
+        h1 { font-size: 2rem; font-family:'Segoe UI','Roboto',sans-serif; font-weight:600; text-align:center; color: var(--btn-selected); margin:0.5rem 0 1rem; }
     }
     </style>
 </head>

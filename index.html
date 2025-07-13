@@ -139,7 +139,8 @@ function loadMatches(){
     .then(r=>r.json())
     .then(data=>{
       const date=getDateKey(currentOffset);
-      const excludedLeagues=new Set(['USL League One','Liga Pro','USL League Two','Major League Soccer','USL Championship','Primera División','Liga MX','Copa Nicaragua','Primera A','Liga MX Femenil','Northern NSW NPL','NNSW League 1']);
+      const excludedLeagues=new Set(['USL League One','Liga Pro','USL League Two','Major League Soccer','USL Championship','Primera División','Liga MX','Copa Nicaragua','Primera A','Liga MX Femenil','Northern NSW NPL','NNSW League 1',
+      'MLS Next Pro','Liga Profesional Argentina','Canadian Premier LEague','Calcutta Premier Division','Brisbane Premier League','2. Division - Group 1','Veikkausliiga','Coppa','Kakkonen - Lohko B','3. Division - Girone 2','Esiliiga A','Liga I','3. Division - Girone 3','Allsvenskan','A lyga','Carioca C','Primera C','Paulista - U20','Division Intermedia']);
       const matches=(data[date]||[]);
       const matchesContainer=document.getElementById('matches');
       const filtersContainer=document.getElementById('league-filters');

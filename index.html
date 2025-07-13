@@ -37,6 +37,47 @@ body{background:var(--bg);color:var(--text)}
 .date-bar button:hover{background:var(--btn-selected);color:#fff}
 #date-label{font-weight:600}
 </style>
+<style>
+  .competition-button {
+    width: 20%;
+    background: var(--btn-bg);
+    color: var(--text);
+    border: 1px solid var(--btn-border);
+    border-radius: 8px;
+    padding: 0.5em;
+    margin-bottom: 0.5em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+  .competition-button img {
+    width: 24px;
+    height: 24px;
+    margin-right: 0.5em;
+  }
+  .competition-button:hover {
+    background: var(--btn-selected);
+  }
+  .match-rectangle {
+    background: var(--section-bg);
+    border-radius: 8px;
+    padding: 1em;
+    margin-bottom: 0.5em;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .match-rectangle img {
+    width: 32px;
+    height: 32px;
+    margin-right: 0.5em;
+  }
+  .match-details {
+    flex-grow: 1;
+    text-align: center;
+  }
+</style>
 </head>
 <body>
     
@@ -44,7 +85,6 @@ body{background:var(--bg);color:var(--text)}
     
     <div class="date-bar"><button id="prev-date">←</button><span id="date-label">Today</span><button id="next-date">→</button></div>
     
-    <h2>Ligas & Copas</h2>
     <div class="filters" id="league-filters"></div>
     
     <div id="matches"></div>
@@ -92,24 +132,50 @@ function loadMatches(){
       const allowedLeagueIds=new Set([1,3,4,7,8,9,11,2,3,4,5,8,195,140,141,142,156,39,40,41,42,45,46,135,136,78,79,61,62,63,667]);
       const matches=(data[date]||[]).filter(m=>allowedLeagueIds.has(m.league.id));
       const matchesContainer=document.getElementById('matches');
-      matchesContainer.innerHTML='';
+      const filtersContainer=document.getElementById('league-filters');
+      filtersContainer.innerHTML='';
+      const leagueSet=new Set();
       matches.forEach(match=>{
-        const matchElement=document.createElement('div');
-        matchElement.textContent=`${match.teams.home.name} vs ${match.teams.away.name}`;
-        matchesContainer.appendChild(matchElement);
+        if(!leagueSet.has(match.league.id)){
+          const btn=document.createElement('button');
+          btn.className='competition-button';
+          btn.innerHTML=`<img src="${match.league.logo}" onerror="this.src='${defaultLogo}'"> ${match.league.name}`;
+          btn.addEventListener('click',()=>{
+            btn.classList.toggle('selected');
+            updateMatches();
+          });
+          filtersContainer.appendChild(btn);
+          leagueSet.add(match.league.id);
+        }
       });
+      function updateMatches(){
+        matchesContainer.innerHTML='';
+        const selectedLeagues=new Set(Array.from(document.querySelectorAll('.competition-button.selected')).map(b=>b.textContent.trim()));
+        matches.forEach(match=>{
+          if(selectedLeagues.size===0||selectedLeagues.has(match.league.name)){
+            const matchElement=document.createElement('div');
+            matchElement.className='match-rectangle';
+            const homeLogo=match.teams.home.logo||defaultLogo;
+            const awayLogo=match.teams.away.logo||defaultLogo;
+            const matchTime=new Date(match.fixture.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const matchDetails=match.fixture.status.short==='FT'?`${match.goals.home} - ${match.goals.away}`:`${matchTime}`;
+            matchElement.innerHTML=`<img src="${homeLogo}" onerror="this.src='${defaultLogo}'"><div class="match-details">${match.teams.home.name} vs ${match.teams.away.name}<br>${matchDetails}</div><img src="${awayLogo}" onerror="this.src='${defaultLogo}'">`;
+            matchesContainer.appendChild(matchElement);
+          }
+        });
+      }
+      updateMatches();
     });
 }
-
-updateDateBar();
-document.getElementById('prev-date').addEventListener('click',()=>{currentOffset--;updateDateBar();});
-document.getElementById('next-date').addEventListener('click',()=>{currentOffset++;updateDateBar();});
-
 function getDateKey(offset){
   const d=new Date();
   d.setUTCDate(d.getUTCDate()+offset);
   return d.toISOString().split('T')[0];
 }
+
+updateDateBar();
+document.getElementById('prev-date').addEventListener('click',()=>{currentOffset--;updateDateBar();});
+document.getElementById('next-date').addEventListener('click',()=>{currentOffset++;updateDateBar();});
 
     </script>
 

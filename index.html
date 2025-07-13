@@ -139,14 +139,12 @@ function loadMatches(){
     .then(r=>r.json())
     .then(data=>{
       const date=getDateKey(currentOffset);
-      const excludedCountries=new Set(['Brazil', 'Argentina', 'USA', 'Canada', 'Mexico', 'Colombia', 'Chile', 'Peru', 'Uruguay', 'Paraguay', 'Venezuela', 'Bolivia', 'Ecuador', 'Panama', 'Costa Rica', 'Honduras', 'El Salvador', 'Guatemala', 'Nicaragua', 'Jamaica', 'Trinidad and Tobago', 'Cuba', 'Haiti', 'Dominican Republic',
-      'China', 'Japan', 'South Korea', 'India', 'Indonesia', 'Pakistan', 'Bangladesh', 'Philippines', 'Vietnam', 'Thailand', 'Malaysia', 'Singapore', 'Nepal', 'Sri Lanka', 'Myanmar', 'Cambodia', 'Laos', 'Mongolia', 'Brunei', 'Maldives', 'Bhutan',
-      'Australia', 'New Zealand', 'Fiji', 'Papua New Guinea', 'Samoa', 'Tonga', 'Vanuatu', 'Solomon Islands',
-      'South Africa', 'Nigeria', 'Egypt', 'Ghana', 'Kenya', 'Ethiopia', 'Tanzania', 'Uganda', 'Algeria', 'Morocco', 'Sudan', 'Angola', 'Cameroon', 'Ivory Coast', 'Senegal', 'Zambia', 'Zimbabwe', 'Congo', 'Tunisia', 'Libya', 'Botswana', 'Namibia', 'Mozambique', 'Madagascar', 'Mauritius', 'Seychelles']);
       const excludedLeagues=new Set(['USL League One','Liga Pro','USL League Two','Major League Soccer','USL Championship','Primera División','Liga MX','Copa Nicaragua','Primera A','Liga MX Femenil','Northern NSW NPL','NNSW League 1',
       'MLS Next Pro','Liga Profesional Argentina','Canadian Premier LEague','Calcutta Premier Division','Brisbane Premier League','2. Division - Group 1','Veikkausliiga','Coppa','Kakkonen - Lohko B','3. Division - Girone 2','Esiliiga A','Liga I','3. Division - Girone 3','Allsvenskan','A lyga','Carioca C','Primera C','Paulista - U20','Division Intermedia',
-      'Queensland NPL','NEW South Wales NPL','Capital Territory NPL','Japan Football League','K3 League','K League 2','Meistriliiga','Esiliiga B','COSAFA U20 Championship','Super League','Alagoano U20','Piala Presiden','3. Division - Girone 1','U20','Asian Cup Women - Qualification','Copa Paulista','Goiano - 2','Premier Soccer League','Paulista Série B','Sudani Premier League','Kakkonen - Lohko C']);
-      const matches=(data[date]||[]).filter(m=>!excludedCountries.has(m.league.country));
+      'Queensland NPL','NEW South Wales NPL','Capital Territory NPL','Japan Football League','K3 League','K League 2','Meistriliiga','Esiliiga B','COSAFA U20 Championship','Super League','Alagoano U20','Piala Presiden','3. Division - Girone 1','U20','Asian Cup Women - Qualification','Copa Paulista','Goiano - 2','Premier Soccer League','Paulista Série B','Sudani Premier League','Kakkonen - Lohko C',
+      '1. Division','A Lyga','African Cup of Nations - Women','Copa America Femenina','Cup','League 1','Premier Division','Primeira','Super cup','Super Liga']);
+      const allowedCountries=new Set(['Spain', 'England', 'France', 'Italy', 'Germany', 'World']);
+      const matches=(data[date]||[]).filter(m=>allowedCountries.has(m.league.country));
       const matchesContainer=document.getElementById('matches');
       const filtersContainer=document.getElementById('league-filters');
       filtersContainer.innerHTML='';

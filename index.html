@@ -77,6 +77,16 @@ body{background:var(--bg);color:var(--text)}
     flex-grow: 1;
     text-align: center;
   }
+  .filters {
+    display: flex;
+    flex-direction: column;
+    width: 20%;
+    float: left;
+  }
+  .matches-container {
+    width: 75%;
+    float: right;
+  }
 </style>
 </head>
 <body>
@@ -86,8 +96,7 @@ body{background:var(--bg);color:var(--text)}
     <div class="date-bar"><button id="prev-date">←</button><span id="date-label">Today</span><button id="next-date">→</button></div>
     
     <div class="filters" id="league-filters"></div>
-    
-    <div id="matches"></div>
+    <div class="matches-container" id="matches"></div>
     
     <script>
     const defaultLogo = 'https://media.api-sports.io/football/teams/20000.png';
@@ -129,8 +138,7 @@ function loadMatches(){
     .then(r=>r.json())
     .then(data=>{
       const date=getDateKey(currentOffset);
-      const allowedLeagueIds=new Set([1,3,4,7,8,9,11,2,3,4,5,8,195,140,141,142,156,39,40,41,42,45,46,135,136,78,79,61,62,63,667]);
-      const matches=(data[date]||[]).filter(m=>allowedLeagueIds.has(m.league.id));
+      const matches=(data[date]||[]);
       const matchesContainer=document.getElementById('matches');
       const filtersContainer=document.getElementById('league-filters');
       filtersContainer.innerHTML='';
